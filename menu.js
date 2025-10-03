@@ -1,126 +1,125 @@
 /**
- * tmco-menu.js
- * Manipulação do menu (desktop + mobile) - pronto para Webflow
- *
- * Instruções: inclua este arquivo no final do body. Não depende de libs.
- *
- * Behaviors implemented:
- * - Inicializa item ativo (usa .is-active ou primeiro item)
- * - Hover / focus / click para alternar detalhes na .mega (desktop)
- * - Toggle mobile menu (.toggle) e overlays (.overlay, .overlay_services)
- * - Click em .service-item-menu atualiza painel .filtered-item via data-slug
- * - Suporte a keyboard (ESC fecha), ARIA attributes
+ * tmco-menu.js — Menu Desktop + Mobile para seu markup
+ * Requisitos do HTML (presentes no seu snippet):
+ * - Item trigger desktop: <li class="nav__item serv"><a class="nav__link aa">Serviços...</a></li>
+ * - Mega container: .mega
+ * - Itens de serviço: .service-item-menu[data-slug]
+ * - Painéis de conteúdo: .filtered-item[data-slug]
+ * - Toggle mobile: .toggle
+ * - Overlay mobile principal: .overlay.std
+ * - Overlay serviços mobile: .overlay_services.overlay
  */
 
 (function () {
   'use strict';
 
-  // --- Helpers ---
+  // Helpers
   const $ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
   const $one = (sel, ctx = document) => ctx.querySelector(sel);
+  const isPointerFine = () => window.matchMedia('(pointer:fine)').matches; // desktop-ish
 
-  // Debounce small utility
-  function debounce(fn, wait = 50) {
-    let t;
-    return (...a) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...a), wait);
-    };
-  }
+  // Elementos-chave
+  let servTriggerA, servTriggerLi, mega, serviceItems, filteredItems, toggleBtn, overlayStd, overlayServices, servMobile;
 
-  // --- Selectors (based on seu markup) ---
-  const CLASS_SERVICE_ITEM = '.service-item-menu';
-  const CLASS_FILTERED_ITEM = '.filtered-item';
-  const SELECTOR_SERV_TRIGGER = '.serv'; // o item do nav que abre o mega
-  const MEGA = '.mega';
-  const TOGGLE = '.toggle';
-  const OVERLAY = '.overlay.std';
-  const OVERLAY_SERVICES = '.overlay_services.overlay';
-  const NAV_LIST_MOBILE = '.nav_list_mobile';
+  document.addEventListener('DOMContentLoaded', init);
 
-  // Namespace to avoid collisions
-  const ns = {
-    serviceItems: [],
-    filteredItems: [],
-    servTrigger: null,
-    megaEl: null,
-    toggleBtn: null,
-    overlay: null,
-    overlayServices: null,
-  };
-
-  // --- Initialization ---
   function init() {
-    ns.serviceItems = $(CLASS_SERVICE_ITEM);
-    ns.filteredItems = $(CLASS_FILTERED_ITEM);
-    ns.servTrigger = $one(SELECTOR_SERV_TRIGGER);
-    ns.megaEl = $one(MEGA);
-    ns.toggleBtn = $one(TOGGLE);
-    ns.overlay = $one(OVERLAY);
-    ns.overlayServices = $one(OVERLAY_SERVICES);
+    servTriggerLi   = $one('.nav__item.serv');
+    servTriggerA    = servTriggerLi ? $one('a', servTriggerLi) : null;
+    mega            = $one('.mega');
 
-    // Basic ARIA setup
-    if (ns.servTrigger) {
-      ns.servTrigger.setAttribute('aria-haspopup', 'true');
-      ns.servTrigger.setAttribute('aria-expanded', 'false');
-    }
-    if (ns.megaEl) ns.megaEl.setAttribute('aria-hidden', 'true');
+    serviceItems    = $('.service-item-menu');       // lista (esq.)
+    filteredItems   = $('.filtered-item');           // painéis (dir.)
 
+    toggleBtn       = $one('.toggle');
+    overlayStd      = $one('.overlay.std');
+    overlayServices = $one('.overlay_services.overlay');
+    servMobile      = $one('.serv.mobile'); // trigger “Serviços” dentro do overlay std
+
+    bindDesktopTrigger();
     bindServiceItems();
-    bindMegaHoverAndFocus();
-    bindMobileToggle();
-    bindDocCloseHandlers();
     ensureInitialActive();
+
+    bindMobile();
+    bindGlobalClosers();
   }
 
-  // --- Ensure initial active item (use .is-active if exists, else first) ---
-  function ensureInitialActive() {
-    let active = ns.serviceItems.find(el => el.classList.contains('is-active'));
-    if (!active && ns.serviceItems.length) {
-      active = ns.serviceItems[0];
-      active.classList.add('is-active');
-    }
-    if (active) setActiveByElement(active, { announce: false });
-  }
+  // ===== Desktop: abrir/fechar mega pelo clique em "Serviços" =====
+  function bindDesktopTrigger() {
+    if (!servTriggerA || !mega) return;
 
-  // --- Set active by element (service-item-menu) ---
-  function setActiveByElement(el, opts = {}) {
-    const slug = el.getAttribute('data-slug');
-    // remove is-active
-    ns.serviceItems.forEach(i => i.classList.remove('is-active'));
-    el.classList.add('is-active');
+    // Preparar ARIA
+    servTriggerA.setAttribute('aria-haspopup', 'true');
+    servTriggerA.setAttribute('aria-expanded', 'false');
+    mega.setAttribute('aria-hidden', 'true');
 
-    // update corresponding filtered item
-    ns.filteredItems.forEach(fi => {
-      const matches = fi.getAttribute('data-slug') === slug;
-      fi.style.display = matches ? 'flex' : 'none';
+    // Clique abre/fecha
+    servTriggerA.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleMega();
     });
 
-    // announce for accessibility if needed
-    if (opts.announce && ns.megaEl) {
-      // set aria attributes
-      ns.serviceItems.forEach(i => i.setAttribute('aria-selected', 'false'));
-      el.setAttribute('aria-selected', 'true');
+    // Em ponteiro "fino" (desktop), manter aberto ao passar mouse
+    if (isPointerFine()) {
+      const show = () => openMega();
+      const hide = (evt) => {
+        // Fecha apenas se cursor sair de ambos: trigger e mega
+        if (!mega.contains(evt.relatedTarget) && !servTriggerLi.contains(evt.relatedTarget)) {
+          closeMega();
+        }
+      };
+      servTriggerLi.addEventListener('mouseenter', show);
+      servTriggerLi.addEventListener('mouseleave', hide);
+      mega.addEventListener('mouseenter', show);
+      mega.addEventListener('mouseleave', hide);
+      // Foco por teclado
+      servTriggerA.addEventListener('focus', show);
+      mega.addEventListener('focusin', show);
+      servTriggerA.addEventListener('blur', (e) => hide(e));
+      mega.addEventListener('focusout', (e) => hide(e));
     }
   }
 
-  // --- Click / touch / keyboard for service items ---
+  function openMega() {
+    if (!mega) return;
+    mega.classList.add('open');
+    mega.style.display = 'block';
+    mega.setAttribute('aria-hidden', 'false');
+    if (servTriggerA) servTriggerA.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMega() {
+    if (!mega) return;
+    mega.classList.remove('open');
+    mega.style.display = 'none';
+    mega.setAttribute('aria-hidden', 'true');
+    if (servTriggerA) servTriggerA.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMega() {
+    if (!mega) return;
+    if (mega.classList.contains('open')) closeMega();
+    else openMega();
+  }
+
+  // ===== Alternância de itens/painéis por data-slug =====
   function bindServiceItems() {
-    ns.serviceItems.forEach(item => {
-      // make items keyboard focusable if not already
+    if (!serviceItems.length || !filteredItems.length) return;
+
+    serviceItems.forEach((item) => {
+      // Acessível via teclado
       if (!item.hasAttribute('tabindex')) item.setAttribute('tabindex', '0');
 
-      // click / touch
-      item.addEventListener('click', e => {
+      item.addEventListener('click', (e) => {
+        // Alguns desses itens podem estar dentro de <a>; previna navegação indesejada
+        if (e.target && e.target.closest('a')) e.preventDefault();
         e.preventDefault();
-        setActiveByElement(item, { announce: true });
-        // if in mobile overlay, keep overlay open or close? We'll keep open.
-        // But for desktop, ensure mega visible
-        showMega();
+        activateItem(item);
+        // Garantir mega aberto no desktop ao clicar
+        if (isPointerFine()) openMega();
       });
 
-      // keyboard activation (Enter / Space)
-      item.addEventListener('keydown', e => {
+      item.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           item.click();
@@ -129,180 +128,138 @@
     });
   }
 
-  // --- Desktop hover/focus behavior for showing mega panel ---
-  function bindMegaHoverAndFocus() {
-    if (!ns.servTrigger || !ns.megaEl) return;
+  function ensureInitialActive() {
+    if (!serviceItems.length || !filteredItems.length) return;
+    let active = serviceItems.find((el) => el.classList.contains('is-active'));
+    if (!active) active = serviceItems[0];
+    activateItem(active, { silent: true });
+  }
 
-    // show/hide helpers (debounced to avoid flicker)
-    const show = debounce(() => {
-      ns.megaEl.style.display = ''; // allow CSS to handle layout
-      ns.megaEl.setAttribute('aria-hidden', 'false');
-      ns.servTrigger.setAttribute('aria-expanded', 'true');
-      ns.megaEl.classList.add('open');
-    }, 30);
+  function activateItem(el, opts = {}) {
+    const slug = el.getAttribute('data-slug');
 
-    const hide = debounce(() => {
-      // only hide if not focused inside
-      if (document.activeElement && ns.megaEl.contains(document.activeElement)) return;
-      ns.megaEl.style.display = '';
-      ns.megaEl.setAttribute('aria-hidden', 'true');
-      ns.servTrigger.setAttribute('aria-expanded', 'false');
-      ns.megaEl.classList.remove('open');
-    }, 150);
+    serviceItems.forEach((i) => {
+      i.classList.remove('is-active');
+      i.setAttribute('aria-selected', 'false');
+    });
+    el.classList.add('is-active');
+    el.setAttribute('aria-selected', 'true');
 
-    // Hover on trigger shows mega
-    ns.servTrigger.addEventListener('mouseenter', show);
-    ns.servTrigger.addEventListener('mouseleave', hide);
+    filteredItems.forEach((panel) => {
+      const match = panel.getAttribute('data-slug') === slug;
+      panel.style.display = match ? 'flex' : 'none';
+      panel.setAttribute('aria-hidden', match ? 'false' : 'true');
+    });
 
-    // Hover on mega keep it open
-    ns.megaEl.addEventListener('mouseenter', show);
-    ns.megaEl.addEventListener('mouseleave', hide);
+    if (!opts.silent && !isPointerFine()) {
+      // Em mobile, ao trocar item, permanece no overlay services
+    }
+  }
 
-    // Focus support (keyboard)
-    ns.servTrigger.addEventListener('focus', show);
-    ns.servTrigger.addEventListener('blur', () => setTimeout(hide, 120));
-    ns.megaEl.addEventListener('focusin', show);
-    ns.megaEl.addEventListener('focusout', () => setTimeout(hide, 120));
-
-    // If user clicks the servTrigger link, toggle mega (useful if they click rather than hover)
-    const anchorInside = $one('a', ns.servTrigger);
-    if (anchorInside) {
-      anchorInside.addEventListener('click', (e) => {
-        // If mega is open, close it; else open it.
-        const isOpen = ns.megaEl.classList.contains('open');
+  // ===== Mobile: toggle e overlays =====
+  function bindMobile() {
+    // Botão hamburguer abre/fecha overlay principal
+    if (toggleBtn && overlayStd) {
+      toggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (isOpen) {
-          hide();
+        const opened = document.body.classList.toggle('tmco-mobile-open');
+        if (opened) {
+          overlayStd.style.display = 'block';
+          overlayStd.setAttribute('aria-hidden', 'false');
+          closeMega(); // evitar mega aberto atrás
         } else {
-          show();
+          overlayStd.style.display = '';
+          overlayStd.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      // Clicar no fundo do overlay fecha
+      overlayStd.addEventListener('click', (e) => {
+        if (e.target === overlayStd) closeAllOverlays();
+      });
+    }
+
+    // Ao clicar em "Serviços" dentro do overlay principal, abre overlay de serviços
+    if (servMobile && overlayServices) {
+      servMobile.addEventListener('click', (e) => {
+        e.preventDefault();
+        openOverlayServices();
+      });
+
+      overlayServices.addEventListener('click', (e) => {
+        if (e.target === overlayServices) {
+          // Fecha overlay serviços e volta para overlay principal (se menu ainda aberto)
+          closeOverlayServices(true);
+        }
+      });
+    }
+
+    // Em mobile, clique em um .service-item-menu dentro do overlay_services mantém overlay aberto
+    // (o bindServiceItems já cuida da ativação; aqui só garantimos que o overlay_services esteja visível)
+    if (overlayServices) {
+      overlayServices.addEventListener('click', (e) => {
+        const item = e.target.closest('.service-item-menu');
+        if (item) {
+          // já ativado por bindServiceItems; nada extra aqui
         }
       });
     }
   }
 
-  // --- Mobile toggle & overlays ---
-  function bindMobileToggle() {
-    if (ns.toggleBtn) {
-      ns.toggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const opened = document.body.classList.toggle('tmco-mobile-open'); // body class to identify open state
-        if (opened) {
-          if (ns.overlay) ns.overlay.style.display = 'block';
-          if (ns.overlay) ns.overlay.setAttribute('aria-hidden', 'false');
-        } else {
-          if (ns.overlay) ns.overlay.style.display = '';
-          if (ns.overlay) ns.overlay.setAttribute('aria-hidden', 'true');
-        }
-      });
+  function openOverlayServices() {
+    if (!overlayServices) return;
+    // Fechar overlay principal visualmente
+    if (overlayStd) {
+      overlayStd.style.display = 'none';
+      overlayStd.setAttribute('aria-hidden', 'true');
     }
+    overlayServices.style.display = 'block';
+    overlayServices.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('tmco-services-open');
+  }
 
-    // Clicking the services item in mobile (serv mobile) should open overlay_services
-    const servMobile = $one('.serv.mobile');
-    if (servMobile && ns.overlayServices) {
-      servMobile.addEventListener('click', (e) => {
-        e.preventDefault();
-        // open services overlay
-        ns.overlayServices.style.display = 'block';
-        ns.overlayServices.setAttribute('aria-hidden', 'false');
-        // hide main overlay if present
-        if (ns.overlay) {
-          ns.overlay.style.display = 'none';
-          ns.overlay.setAttribute('aria-hidden', 'true');
-        }
-        // add class for mobile view
-        document.body.classList.add('tmco-services-open');
-      });
-    }
+  function closeOverlayServices(backToMain) {
+    if (!overlayServices) return;
+    overlayServices.style.display = '';
+    overlayServices.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('tmco-services-open');
 
-    // Close overlays when clicking on overlay background (but not when clicking inside nav list)
-    if (ns.overlay) {
-      ns.overlay.addEventListener('click', (e) => {
-        // if clicked directly on overlay (not on child), close
-        if (e.target === ns.overlay) {
-          closeAllOverlays();
-        }
-      });
-    }
-    if (ns.overlayServices) {
-      ns.overlayServices.addEventListener('click', (e) => {
-        if (e.target === ns.overlayServices) {
-          ns.overlayServices.style.display = '';
-          ns.overlayServices.setAttribute('aria-hidden', 'true');
-          document.body.classList.remove('tmco-services-open');
-          // restore main overlay if toggle is open
-          if (document.body.classList.contains('tmco-mobile-open') && ns.overlay) {
-            ns.overlay.style.display = 'block';
-            ns.overlay.setAttribute('aria-hidden', 'false');
-          }
-        }
-      });
+    if (backToMain && overlayStd && document.body.classList.contains('tmco-mobile-open')) {
+      overlayStd.style.display = 'block';
+      overlayStd.setAttribute('aria-hidden', 'false');
     }
   }
 
   function closeAllOverlays() {
-    if (ns.overlay) {
-      ns.overlay.style.display = '';
-      ns.overlay.setAttribute('aria-hidden', 'true');
+    if (overlayStd) {
+      overlayStd.style.display = '';
+      overlayStd.setAttribute('aria-hidden', 'true');
     }
-    if (ns.overlayServices) {
-      ns.overlayServices.style.display = '';
-      ns.overlayServices.setAttribute('aria-hidden', 'true');
+    if (overlayServices) {
+      overlayServices.style.display = '';
+      overlayServices.setAttribute('aria-hidden', 'true');
     }
     document.body.classList.remove('tmco-mobile-open', 'tmco-services-open');
   }
 
-  // --- Document-level close handlers (ESC, click outside) ---
-  function bindDocCloseHandlers() {
-    // ESC to close
+  // ===== Fechamentos globais (ESC + clique fora da mega) =====
+  function bindGlobalClosers() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
-        // close mega and overlays
-        if (ns.megaEl) {
-          ns.megaEl.style.display = '';
-          ns.megaEl.setAttribute('aria-hidden', 'true');
-          ns.megaEl.classList.remove('open');
-          if (ns.servTrigger) ns.servTrigger.setAttribute('aria-expanded', 'false');
-        }
+        closeMega();
         closeAllOverlays();
       }
     });
 
-    // click outside the mega to close (desktop)
-    document.addEventListener('click', (ev) => {
-      const target = ev.target;
-      if (!ns.megaEl || !ns.servTrigger) return;
-      if (ns.megaEl.contains(target) || ns.servTrigger.contains(target)) {
-        // click inside -> do nothing
-        return;
+    // Click fora da mega fecha (somente se aberta)
+    document.addEventListener('click', (e) => {
+      if (!mega || !mega.classList.contains('open')) return;
+      const clickInsideMega = mega.contains(e.target);
+      const clickOnTrigger  = servTriggerLi && servTriggerLi.contains(e.target);
+      if (!clickInsideMega && !clickOnTrigger) {
+        closeMega();
       }
-      // click outside -> close mega (but only if it is open)
-      if (ns.megaEl.classList.contains('open')) {
-        ns.megaEl.style.display = '';
-        ns.megaEl.setAttribute('aria-hidden', 'true');
-        ns.megaEl.classList.remove('open');
-        ns.servTrigger.setAttribute('aria-expanded', 'false');
-      }
-    }, true);
+    });
   }
 
-  // --- Utility: set active by slug (public) ---
-  function setActiveBySlug(slug) {
-    const el = ns.serviceItems.find(i => i.getAttribute('data-slug') === slug);
-    if (el) setActiveByElement(el, { announce: true });
-  }
-
-  // --- Expose some debug methods (on window.tmcoMenu) ---
-  window.tmcoMenu = {
-    init,
-    setActiveBySlug,
-    setActiveByElement,
-    closeAllOverlays
-  };
-
-  // Auto-init on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
 })();
