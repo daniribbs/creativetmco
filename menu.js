@@ -2,6 +2,7 @@
  * tmco-menu.js — Menu Desktop + Mobile (com display:flex)
  * - Desktop: clique em "Serviços" abre/fecha a .mega (latch). Não fecha ao mover o mouse.
  * - Mobile: toggle abre/fecha overlay principal; "serv mobile opened" volta do overlay de serviços para o principal.
+ * - Ao clicar no toggle com overlay_services aberto, fecha overlay_services também.
  * - Alternância de painéis por data-slug.
  */
 
@@ -40,7 +41,7 @@
     bindMobile();
     bindGlobalClosers();
 
-    // Garante estado inicial escondido por JS (se o CSS não tiver feito)
+    // Estado inicial (se o CSS não tiver feito)
     if (mega) {
       mega.style.display = 'none';
       mega.setAttribute('aria-hidden', 'true');
@@ -63,17 +64,15 @@
     servTriggerA.setAttribute('aria-expanded', 'false');
     mega.setAttribute('aria-hidden', 'true');
 
-    // Clique alterna e mantém aberto até fechar explicitamente
     servTriggerA.addEventListener('click', (e) => {
       e.preventDefault();
       toggleMega();
     });
 
-    // Em ponteiro fino, permitir também abrir por hover sem fechar automático ao sair
     if (isPointerFine()) {
       servTriggerLi.addEventListener('mouseenter', () => openMega());
       mega.addEventListener('mouseenter', () => openMega());
-      // Importante: NÃO fechamos em mouseleave. Fechamento só por clique fora / ESC / segundo clique.
+      // Não fechamos em mouseleave — só por clique fora / ESC / segundo clique.
     }
   }
 
@@ -107,14 +106,12 @@
       if (!item.hasAttribute('tabindex')) item.setAttribute('tabindex', '0');
 
       item.addEventListener('click', (e) => {
-        // Evita navegação se houver <a> interno
         const a = e.target.closest('a');
         if (a) e.preventDefault();
         e.preventDefault();
 
         activateItem(item);
 
-        // No desktop, garantir mega aberta ao clicar
         if (isPointerFine()) openMega();
       });
 
@@ -156,6 +153,12 @@
     if (toggleBtn) {
       toggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
+
+        // ✅ Ajuste pedido: se overlay_services estiver aberto, feche-o ao clicar no toggle
+        if (document.body.classList.contains('tmco-services-open')) {
+          closeOverlayServices(false); // fecha o overlay de serviços primeiro
+        }
+
         const opening = !document.body.classList.contains('tmco-mobile-open');
 
         if (opening) {
@@ -165,7 +168,7 @@
             overlayStd.style.display = 'flex';        // flex
             overlayStd.setAttribute('aria-hidden', 'false');
           }
-          // Garantir que overlay de serviços esteja fechado
+          // Garantia extra: overlay serviços fechado
           closeOverlayServices(false);
           // Fechar mega no fundo
           closeMega();
@@ -184,16 +187,15 @@
       });
     }
 
-    // Dentro do overlay de serviços: clicar no "nav__item serv mobile opened" deve voltar ao overlay principal
+    // Clicar em "nav__item serv mobile opened" volta do overlay de serviços para o principal
     if (servMobileOpened && overlayServices) {
       servMobileOpened.addEventListener('click', (e) => {
         e.preventDefault();
-        // Fecha overlay serviços e reabre principal
         closeOverlayServices(true);
       });
     }
 
-    // Clique no fundo dos overlays fecha (comportamento padrão)
+    // Clique no fundo dos overlays fecha
     if (overlayStd) {
       overlayStd.addEventListener('click', (e) => {
         if (e.target === overlayStd) closeAllOverlays();
@@ -202,7 +204,6 @@
     if (overlayServices) {
       overlayServices.addEventListener('click', (e) => {
         if (e.target === overlayServices) {
-          // Fecha overlay serviços e, se o menu principal estiver ativo, reabre overlay principal
           closeOverlayServices(true);
         }
       });
@@ -247,7 +248,6 @@
 
   // ===== Fechamentos globais =====
   function bindGlobalClosers() {
-    // ESC fecha mega e overlays
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
         closeMega();
