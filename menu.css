@@ -1,116 +1,44 @@
-/* ========== Variáveis e resets locais ========== */
-:root {
-  --tmco-ease: cubic-bezier(.2,.7,.2,1);
-  --tmco-fade: .22s var(--tmco-ease);
-  --tmco-shift: 8px;
+:root{--tmco-ease:cubic-bezier(.2,.7,.2,1);--tmco-fade:.22s var(--tmco-ease);--tmco-shift:8px}
+
+/* MEGA (desktop) */
+.mega{
+  display:flex;opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(var(--tmco-shift));
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+}
+.mega.is-open{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
 }
 
-/* Acessibilidade (respeita usuários com redução de movimento) */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* PAINÉIS (direita) — empilhados no mesmo container */
+.filtered-item{
+  display:flex;opacity:0;visibility:hidden;pointer-events:none;
+  position:absolute;inset:0;transform:translateY(6px);
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+}
+.filtered-item.is-visible{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
 }
 
-/* ========== Mega (desktop) ========== */
-/* Dica: garanta position (absolute/fixed) via Webflow para não ocupar layout */
-.mega {
-  display: flex;             /* sempre flex, sem “display:none” */
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(var(--tmco-shift));
-  transition:
-    opacity var(--tmco-fade),
-    transform var(--tmco-fade),
-    visibility 0s linear .22s; /* esconde visibilidade após a transição */
+/* OVERLAYS (mobile) */
+.overlay.std,.overlay_services.overlay{
+  display:flex;opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(var(--tmco-shift));
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+}
+.tmco-mobile-open .overlay.std,
+.tmco-services-open .overlay_services.overlay{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
 }
 
-/* Aberto */
-.mega.is-open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition:
-    opacity var(--tmco-fade),
-    transform var(--tmco-fade),
-    visibility 0s; /* visível imediatamente */
-}
+/* ÍCONES DO TOGGLE */
+.toggle .close{display:none}
+.tmco-mobile-open .toggle .hamb,.tmco-services-open .toggle .hamb{display:none}
+.tmco-mobile-open .toggle .close,.tmco-services-open .toggle .close{display:block}
 
-/* ========== Painéis filtrados (lado direito) ========== */
-.filtered-item {
-  display: flex;             /* manter layout */
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  position: absolute;        /* empilha painéis no mesmo espaço */
-  inset: 0;                  /* ajusta ao container visual */
-  transform: translateY(6px);
-  transition:
-    opacity var(--tmco-fade),
-    transform var(--tmco-fade),
-    visibility 0s linear .22s;
-}
-.filtered-item.is-visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition:
-    opacity var(--tmco-fade),
-    transform var(--tmco-fade),
-    visibility 0s;
-}
-
-/* Opcional: destaque visual do item ativo na lista esquerda */
-.service-item-menu.is-active {
-  outline: none;
-  /* personalize como quiser: cor, background, sublinhado… */
-}
-
-/* ========== Overlays (mobile) ========== */
-.overlay.std,
-.overlay_services.overlay {
-  display: flex;             /* sempre flex */
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(var(--tmco-shift));
-  transition:
-    opacity var(--tmco-fade),
-    transform var(--tmco-fade),
-    visibility 0s linear .22s;
-}
-
-.tmco-mobile-open .overlay.std {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
-}
-
-.tmco-services-open .overlay_services.overlay {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
-}
-
-/* ========== Ícones do toggle ========== */
-.toggle .close { display: none; }
-.tmco-mobile-open .toggle .hamb,
-.tmco-services-open .toggle .hamb { display: none; }
-.tmco-mobile-open .toggle .close,
-.tmco-services-open .toggle .close { display: block; }
-
-/* Evita “piscadas” de clique nos links */
-.nav__item.serv > a,
-.serv.mobile > a {
-  -webkit-tap-highlight-color: transparent;
-}
+/* Acessibilidade/UX */
+.service-item-menu.is-active{outline:0} /* estilize como quiser */
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
