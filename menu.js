@@ -1,15 +1,17 @@
 /**
  * tmco-menu.js — Menu Desktop + Mobile (display:flex)
+ * Regras pedidas:
  * - Desktop:
- *   - Clique em "Serviços" abre/fecha .mega (latch).
- *   - Hover em .service-item-menu alterna o painel imediatamente.
- *   - Não fecha ao sair com mouse; só por clique fora / ESC / novo clique.
+ *   - Hover em .service-item-menu alterna e troca .is-active SOMENTE se não estiver travado.
+ *   - Clique em .service-item-menu ativa e TRAVA (ignora hovers posteriores).
+ *   - Travamento sai ao fechar a mega (ESC/clique fora/segundo clique no "Serviços")
+ *     ou ao entrar no fluxo mobile (abrir overlays).
+ *   - Mega abre/fecha em “latch”.
  * - Mobile:
  *   - toggle abre/fecha overlay principal;
  *   - "serv mobile" abre overlay de serviços;
- *   - "nav__item serv mobile opened" fecha overlay serviços e volta ao principal;
- *   - toggle fecha overlay serviços se ele estiver aberto.
- * - Painéis alternados por data-slug.
+ *   - "nav__item serv mobile opened" volta ao overlay principal;
+ *   - toggle fecha overlay de serviços se ele estiver aberto.
  */
 
 (function () {
@@ -22,6 +24,10 @@
   let servTriggerLi, servTriggerA, mega;
   let serviceItems, filteredItems;
   let toggleBtn, overlayStd, overlayServices, servMobile, servMobileOpened;
+
+  // Estado de travamento e cache
+  let locked = false;         // quando true, hover não alterna
+  let lastActiveSlug = null;  // evita trabalho repetido no hover
 
   document.addEventListener('DOMContentLoaded', init);
 
@@ -42,6 +48,7 @@
 
     bindDesktopTrigger();
     bindServiceItems();
+    bindDesktopHoverDelegation();
     ensureInitialActive();
 
     bindMobile();
@@ -62,7 +69,7 @@
     }
   }
 
-  // ===== Desktop: clique em "Serviços" abre/fecha (sticky) =====
+  // ===== Desktop: clique em "Serviços" abre/fecha (latch) =====
   function bindDesktopTrigger() {
     if (!servTriggerA || !mega) return;
 
@@ -78,14 +85,14 @@
     if (isPointerFine()) {
       servTriggerLi.addEventListener('mouseenter', () => openMega());
       mega.addEventListener('mouseenter', () => openMega());
-      // Não fechamos em mouseleave (latch). Fechamento só por clique fora / ESC / segundo clique.
+      // Não fechamos em mouseleave; só por clique fora/ESC/segundo clique.
     }
   }
 
   function openMega() {
     if (!mega) return;
     mega.classList.add('open');
-    mega.style.display = 'flex';               // sempre flex
+    mega.style.display = 'flex';
     mega.setAttribute('aria-hidden', 'false');
     if (servTriggerA) servTriggerA.setAttribute('aria-expanded', 'true');
   }
@@ -96,12 +103,17 @@
     mega.style.display = 'none';
     mega.setAttribute('aria-hidden', 'true');
     if (servTriggerA) servTriggerA.setAttribute('aria-expanded', 'false');
+    // Ao fechar a mega, destrava hover
+    locked = false;
   }
 
   function toggleMega() {
     if (!mega) return;
-    if (mega.classList.contains('open')) closeMega();
-    else openMega();
+    if (mega.classList.contains('open')) {
+      closeMega();
+    } else {
+      openMega();
+    }
   }
 
   // ===== Alternância de itens/painéis por data-slug =====
@@ -111,15 +123,15 @@
     serviceItems.forEach((item) => {
       if (!item.hasAttribute('tabindex')) item.setAttribute('tabindex', '0');
 
-      // Clique ativa
+      // Clique ativa e TRAVA
       item.addEventListener('click', (e) => {
         const a = e.target.closest('a');
         if (a) e.preventDefault();
         e.preventDefault();
 
         activateItem(item);
+        locked = true; // trava até fechar mega (ou fluxo mobile reabrir)
 
-        // No desktop, garantir mega aberta ao clicar
         if (isPointerFine()) openMega();
       });
 
@@ -130,13 +142,27 @@
           item.click();
         }
       });
+    });
+  }
 
-      // HOVER (Desktop): alterna imediatamente
-      item.addEventListener('mouseenter', () => {
-        if (!isPointerFine()) return; // evita interferir no mobile
+  // ===== Delegação de hover na mega (desktop, apenas quando não travado) =====
+  function bindDesktopHoverDelegation() {
+    if (!mega) return;
+
+    mega.addEventListener('mouseover', (e) => {
+      if (!isPointerFine()) return;                 // só desktop
+      if (!mega.classList.contains('open')) return; // só com mega aberta
+      if (locked) return;                           // ignorar hover quando travado
+      if (document.body.classList.contains('tmco-services-open')) return; // se overlay mobile serviços aberto, ignore
+
+      const item = e.target.closest('.service-item-menu');
+      if (!item || !mega.contains(item)) return;
+
+      const slug = item.getAttribute('data-slug') || '';
+      if (slug && slug !== lastActiveSlug) {
+        lastActiveSlug = slug;
         activateItem(item);
-        openMega(); // garante visível
-      });
+      }
     });
   }
 
@@ -144,10 +170,12 @@
     if (!serviceItems.length || !filteredItems.length) return;
     let active = serviceItems.find((el) => el.classList.contains('is-active'));
     if (!active) active = serviceItems[0];
+    lastActiveSlug = active ? active.getAttribute('data-slug') : null;
     activateItem(active, { silent: true });
   }
 
   function activateItem(el, opts = {}) {
+    if (!el) return;
     const slug = el.getAttribute('data-slug');
 
     serviceItems.forEach((i) => {
@@ -159,9 +187,11 @@
 
     filteredItems.forEach((panel) => {
       const match = panel.getAttribute('data-slug') === slug;
-      panel.style.display = match ? 'flex' : 'none';  // sempre flex
+      panel.style.display = match ? 'flex' : 'none';
       panel.setAttribute('aria-hidden', match ? 'false' : 'true');
     });
+
+    lastActiveSlug = slug || null;
   }
 
   // ===== Mobile: toggle & overlays =====
@@ -183,6 +213,8 @@
             overlayStd.style.display = 'flex';
             overlayStd.setAttribute('aria-hidden', 'false');
           }
+          // Entrando no fluxo mobile, garantir destravar hover (por segurança)
+          locked = false;
           closeOverlayServices(false);
           closeMega();
         } else {
@@ -199,7 +231,7 @@
       });
     }
 
-    // No overlay de serviços: clicar em "nav__item serv mobile opened" volta ao overlay principal
+    // No overlay de serviços: "nav__item serv mobile opened" volta ao overlay principal
     if (servMobileOpened && overlayServices) {
       servMobileOpened.addEventListener('click', (e) => {
         e.preventDefault();
@@ -231,6 +263,8 @@
     overlayServices.style.display = 'flex';
     overlayServices.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tmco-services-open');
+    // Ao entrar em mobile services, destrava (não há hover no mobile)
+    locked = false;
   }
 
   function closeOverlayServices(backToMain) {
@@ -272,7 +306,7 @@
       const clickInsideMega = mega.contains(e.target);
       const clickOnTrigger  = servTriggerLi && servTriggerLi.contains(e.target);
       if (!clickInsideMega && !clickOnTrigger) {
-        closeMega();
+        closeMega(); // isto também destrava
       }
     });
   }
