@@ -1,4 +1,3 @@
-<script>
 document.addEventListener("DOMContentLoaded", function() {
   document.querySelectorAll('.portfolio-list-image').forEach(track => {
     const clone = track.innerHTML;
@@ -7,8 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 });
-</script>
-<script>
+
 document.addEventListener("DOMContentLoaded", function() {
   const menus = document.querySelectorAll('.service-item-menu');
   const details = document.querySelectorAll('.filtered-item');
@@ -42,4 +40,3 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 });
-</script>
