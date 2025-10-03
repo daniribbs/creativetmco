@@ -1,17 +1,7 @@
 /**
  * tmco-menu.js — Menu Desktop + Mobile (display:flex)
- * Regras pedidas:
- * - Desktop:
- *   - Hover em .service-item-menu alterna e troca .is-active SOMENTE se não estiver travado.
- *   - Clique em .service-item-menu ativa e TRAVA (ignora hovers posteriores).
- *   - Travamento sai ao fechar a mega (ESC/clique fora/segundo clique no "Serviços")
- *     ou ao entrar no fluxo mobile (abrir overlays).
- *   - Mega abre/fecha em “latch”.
- * - Mobile:
- *   - toggle abre/fecha overlay principal;
- *   - "serv mobile" abre overlay de serviços;
- *   - "nav__item serv mobile opened" volta ao overlay principal;
- *   - toggle fecha overlay de serviços se ele estiver aberto.
+ * Extras agora:
+ * - Alterna ícones do .toggle: .hamb <-> .close conforme overlays ativos.
  */
 
 (function () {
@@ -25,9 +15,12 @@
   let serviceItems, filteredItems;
   let toggleBtn, overlayStd, overlayServices, servMobile, servMobileOpened;
 
-  // Estado de travamento e cache
-  let locked = false;         // quando true, hover não alterna
-  let lastActiveSlug = null;  // evita trabalho repetido no hover
+  // Ícones do toggle
+  let iconHamb, iconClose;
+
+  // Estado de travamento e cache (desktop)
+  let locked = false;
+  let lastActiveSlug = null;
 
   document.addEventListener('DOMContentLoaded', init);
 
@@ -42,9 +35,12 @@
     toggleBtn         = $one('.toggle');
     overlayStd        = $one('.overlay.std');
     overlayServices   = $one('.overlay_services.overlay');
-    servMobile        = $one('.serv.mobile'); // trigger "Serviços" no overlay principal
-    // dentro do overlay_services há um <li class="nav__item serv mobile opened">
+    servMobile        = $one('.serv.mobile');
     servMobileOpened  = overlayServices ? overlayServices.querySelector('.nav__item.serv.mobile.opened') : null;
+
+    // ícones do toggle
+    iconHamb  = $one('.toggle .hamb');
+    iconClose = $one('.toggle .close');
 
     bindDesktopTrigger();
     bindServiceItems();
@@ -54,7 +50,7 @@
     bindMobile();
     bindGlobalClosers();
 
-    // Estado inicial (fallback, caso CSS não oculte)
+    // Estado inicial (fallback)
     if (mega) {
       mega.style.display = 'none';
       mega.setAttribute('aria-hidden', 'true');
@@ -67,6 +63,19 @@
       overlayServices.style.display = '';
       overlayServices.setAttribute('aria-hidden', 'true');
     }
+
+    // ícones iniciais
+    updateToggleIcons();
+  }
+
+  // ===== Controle dos ícones do toggle =====
+  function updateToggleIcons() {
+    const overlayActive =
+      document.body.classList.contains('tmco-mobile-open') ||
+      document.body.classList.contains('tmco-services-open');
+
+    if (iconHamb)  iconHamb.style.display  = overlayActive ? 'none'  : 'block';
+    if (iconClose) iconClose.style.display = overlayActive ? 'block' : 'none';
   }
 
   // ===== Desktop: clique em "Serviços" abre/fecha (latch) =====
@@ -85,7 +94,7 @@
     if (isPointerFine()) {
       servTriggerLi.addEventListener('mouseenter', () => openMega());
       mega.addEventListener('mouseenter', () => openMega());
-      // Não fechamos em mouseleave; só por clique fora/ESC/segundo clique.
+      // não fechamos em mouseleave; fechamento só por clique fora / ESC / segundo clique
     }
   }
 
@@ -103,17 +112,13 @@
     mega.style.display = 'none';
     mega.setAttribute('aria-hidden', 'true');
     if (servTriggerA) servTriggerA.setAttribute('aria-expanded', 'false');
-    // Ao fechar a mega, destrava hover
-    locked = false;
+    locked = false; // destrava hover ao fechar
   }
 
   function toggleMega() {
     if (!mega) return;
-    if (mega.classList.contains('open')) {
-      closeMega();
-    } else {
-      openMega();
-    }
+    if (mega.classList.contains('open')) closeMega();
+    else openMega();
   }
 
   // ===== Alternância de itens/painéis por data-slug =====
@@ -130,7 +135,7 @@
         e.preventDefault();
 
         activateItem(item);
-        locked = true; // trava até fechar mega (ou fluxo mobile reabrir)
+        locked = true; // ignora hovers posteriores até fechar a mega
 
         if (isPointerFine()) openMega();
       });
@@ -145,15 +150,15 @@
     });
   }
 
-  // ===== Delegação de hover na mega (desktop, apenas quando não travado) =====
+  // ===== Hover delegado na mega (desktop, somente destravado) =====
   function bindDesktopHoverDelegation() {
     if (!mega) return;
 
     mega.addEventListener('mouseover', (e) => {
-      if (!isPointerFine()) return;                 // só desktop
-      if (!mega.classList.contains('open')) return; // só com mega aberta
-      if (locked) return;                           // ignorar hover quando travado
-      if (document.body.classList.contains('tmco-services-open')) return; // se overlay mobile serviços aberto, ignore
+      if (!isPointerFine()) return;
+      if (!mega.classList.contains('open')) return;
+      if (locked) return;
+      if (document.body.classList.contains('tmco-services-open')) return;
 
       const item = e.target.closest('.service-item-menu');
       if (!item || !mega.contains(item)) return;
@@ -200,7 +205,7 @@
       toggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
-        // Se overlay de serviços estiver aberto, fecha antes de alternar principal
+        // se overlay de serviços estiver aberto, fecha antes de alternar principal
         if (document.body.classList.contains('tmco-services-open')) {
           closeOverlayServices(false);
         }
@@ -213,13 +218,14 @@
             overlayStd.style.display = 'flex';
             overlayStd.setAttribute('aria-hidden', 'false');
           }
-          // Entrando no fluxo mobile, garantir destravar hover (por segurança)
-          locked = false;
+          locked = false;         // entrando no fluxo mobile, destrava
           closeOverlayServices(false);
           closeMega();
         } else {
           closeAllOverlays();
         }
+
+        updateToggleIcons();
       });
     }
 
@@ -242,13 +248,17 @@
     // Clique no fundo dos overlays fecha
     if (overlayStd) {
       overlayStd.addEventListener('click', (e) => {
-        if (e.target === overlayStd) closeAllOverlays();
+        if (e.target === overlayStd) {
+          closeAllOverlays();
+          updateToggleIcons();
+        }
       });
     }
     if (overlayServices) {
       overlayServices.addEventListener('click', (e) => {
         if (e.target === overlayServices) {
           closeOverlayServices(true);
+          updateToggleIcons();
         }
       });
     }
@@ -263,8 +273,8 @@
     overlayServices.style.display = 'flex';
     overlayServices.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tmco-services-open');
-    // Ao entrar em mobile services, destrava (não há hover no mobile)
     locked = false;
+    updateToggleIcons();
   }
 
   function closeOverlayServices(backToMain) {
@@ -277,6 +287,7 @@
       overlayStd.style.display = 'flex';
       overlayStd.setAttribute('aria-hidden', 'false');
     }
+    updateToggleIcons();
   }
 
   function closeAllOverlays() {
@@ -289,6 +300,7 @@
       overlayServices.setAttribute('aria-hidden', 'true');
     }
     document.body.classList.remove('tmco-mobile-open', 'tmco-services-open');
+    updateToggleIcons();
   }
 
   // ===== Fechamentos globais =====
@@ -296,7 +308,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
         closeMega();
-        closeAllOverlays();
+        closeAllOverlays(); // já chama updateToggleIcons()
       }
     });
 
@@ -306,7 +318,7 @@
       const clickInsideMega = mega.contains(e.target);
       const clickOnTrigger  = servTriggerLi && servTriggerLi.contains(e.target);
       if (!clickInsideMega && !clickOnTrigger) {
-        closeMega(); // isto também destrava
+        closeMega();
       }
     });
   }
