@@ -1,44 +1,87 @@
-:root{--tmco-ease:cubic-bezier(.2,.7,.2,1);--tmco-fade:.22s var(--tmco-ease);--tmco-shift:8px}
+:root{
+  --tmco-ease:cubic-bezier(.2,.7,.2,1);
+  --tmco-fade:.22s var(--tmco-ease);
+  --tmco-shift:8px;
+  --tmco-z-mega: 1000;
+  --tmco-z-overlay: 1500;
+}
 
-/* MEGA (desktop) */
+/* ===== Header/nav como referência de posicionamento ===== */
+.header{ position:relative; } /* garante contexto pra mega */
+.nav{ position:relative; z-index: 2; } /* sobre o conteúdo */
+
+/* ===== Mega (desktop) ===== */
 .mega{
-  display:flex;opacity:0;visibility:hidden;pointer-events:none;
-  transform:translateY(var(--tmco-shift));
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+  position:absolute; /* fica sob o nav */
+  top: 64px;         /* ajuste: distância abaixo do topo do header/nav */
+  left: 0;           /* ajuste: alinhar à esquerda do container */
+  width: 100%;       /* ajuste: pode usar valor fixo se preferir */
+  z-index: var(--tmco-z-mega);
+
+  display:flex;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform: translateY(var(--tmco-shift));
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s linear .22s;
 }
 .mega.is-open{
-  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
+  opacity:1; visibility:visible; pointer-events:auto;
+  transform: translateY(0);
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
 }
 
-/* PAINÉIS (direita) — empilhados no mesmo container */
+/* ===== Coluna direita dos painéis ===== */
+/* O container que envolve .filtered-item precisa ser relative */
+.mega .div-block-4,      /* ajuste para o seu wrapper da área direita */
+.mega .collection-list-wrapper-2,
+.mega .collection-list-2{
+  position:relative; /* para empilhar os painéis absolutos */
+}
+
+/* Painéis empilhados (animam sem empurrar layout) */
 .filtered-item{
-  display:flex;opacity:0;visibility:hidden;pointer-events:none;
-  position:absolute;inset:0;transform:translateY(6px);
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+  display:flex;
+  position:absolute; inset:0; /* ocupa todo o espaço do wrapper */
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform: translateY(6px);
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s linear .22s;
 }
 .filtered-item.is-visible{
-  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
+  opacity:1; visibility:visible; pointer-events:auto;
+  transform: translateY(0);
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
 }
 
-/* OVERLAYS (mobile) */
-.overlay.std,.overlay_services.overlay{
-  display:flex;opacity:0;visibility:hidden;pointer-events:none;
-  transform:translateY(var(--tmco-shift));
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s linear .22s;
+/* ===== Overlays (mobile) ===== */
+.overlay.std,
+.overlay_services.overlay{
+  position: fixed; inset: 0; z-index: var(--tmco-z-overlay);
+  display:flex;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform: translateY(var(--tmco-shift));
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s linear .22s;
+  /* opcional: fundo */
+  /* background: rgba(0,0,0,.4); */
 }
-.tmco-mobile-open .overlay.std,
+
+.tmco-mobile-open .overlay.std{
+  opacity:1; visibility:visible; pointer-events:auto; transform: translateY(0);
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
+}
 .tmco-services-open .overlay_services.overlay{
-  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
-  transition:opacity var(--tmco-fade),transform var(--tmco-fade),visibility 0s;
+  opacity:1; visibility:visible; pointer-events:auto; transform: translateY(0);
+  transition: opacity var(--tmco-fade), transform var(--tmco-fade), visibility 0s;
 }
 
-/* ÍCONES DO TOGGLE */
-.toggle .close{display:none}
-.tmco-mobile-open .toggle .hamb,.tmco-services-open .toggle .hamb{display:none}
-.tmco-mobile-open .toggle .close,.tmco-services-open .toggle .close{display:block}
+/* ===== Ícones do toggle ===== */
+.toggle .close{ display:none; }
+.tmco-mobile-open .toggle .hamb,
+.tmco-services-open .toggle .hamb{ display:none; }
+.tmco-mobile-open .toggle .close,
+.tmco-services-open .toggle .close{ display:block; }
 
-/* Acessibilidade/UX */
-.service-item-menu.is-active{outline:0} /* estilize como quiser */
-@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* ===== UX/A11y extras ===== */
+.service-item-menu{ cursor:pointer; }
+.service-item-menu.is-active{ outline: none; }
+@media (prefers-reduced-motion:reduce){
+  *{ transition-duration:.01ms !important; animation-duration:.01ms !important; }
+}
