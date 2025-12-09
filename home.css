@@ -57,17 +57,6 @@ h1.heading.hero.home {
   overflow: hidden;
 }
 
-.logo-lista {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 3rem; /* ou o espaçamento que você quiser entre logos */
-}
-
-.logo-cliente img {
-  max-height: 40px; /* ajusta conforme o design */
-  width: auto;
-}
 
 
 @media screen and (max-width: 991px) {
