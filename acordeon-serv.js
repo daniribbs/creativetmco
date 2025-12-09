@@ -29,15 +29,14 @@ document.addEventListener('DOMContentLoaded', function () {
   `;
   document.head.appendChild(style);
 
-  /* --- Lógica do acordeon --- */
-  const items = document.querySelectorAll('.service-item-acordeon');
-  const imageItems = document.querySelectorAll('.image-service-acordeon-item');
+  const items = Array.from(document.querySelectorAll('.service-item-acordeon'));
+  const imageItems = Array.from(document.querySelectorAll('.image-service-acordeon-item'));
+  const isFinePointer = window.matchMedia && window.matchMedia('(pointer:fine)').matches;
 
-  // função para mostrar a imagem correspondente ao item clicado
+  // função para mostrar a imagem correspondente ao item ativo
   function showImageForItem(item) {
     if (!imageItems.length || !item) return;
 
-    // tentamos casar pelo data-slug ou pelo texto do título vs atributo "service"
     const itemSlug  = (item.getAttribute('data-slug') || '').trim().toLowerCase();
     const titleEl   = item.querySelector('.acordeon-serv-title-item');
     const itemTitle = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
@@ -56,10 +55,8 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // fallback: se nada casou, usa a primeira imagem
     if (!target) target = imageItems[0];
 
-    // esconde todas e mostra só a escolhida
     imageItems.forEach(function (imgItem) {
       imgItem.classList.remove('is-visible');
     });
@@ -68,29 +65,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  items.forEach(function (item, index) {
+  // abre um item e fecha todos os outros
+  function openItemExclusive(item) {
+    if (!item) return;
+    items.forEach(function (it) {
+      if (it !== item) it.classList.remove('is-open');
+    });
+    if (!item.classList.contains('is-open')) {
+      item.classList.add('is-open');
+    }
+    showImageForItem(item);
+  }
+
+  items.forEach(function (item) {
     const contentTrigger = item.querySelector('.acordeon-service-content');
     const actions = item.querySelector('.actions-acordoen');
 
     if (!contentTrigger || !actions) return;
 
     function toggleItem() {
-      item.classList.toggle('is-open');
-      // sempre que clicar nesse item, atualiza a imagem para ele
-      showImageForItem(item);
+      const isOpen = item.classList.contains('is-open');
+
+      if (isOpen) {
+        // se clicar no que já está aberto, fecha (nenhum aberto)
+        item.classList.remove('is-open');
+      } else {
+        // abre este e fecha os outros
+        openItemExclusive(item);
+      }
     }
 
+    // clique no conteúdo abre/fecha
     contentTrigger.addEventListener('click', toggleItem);
 
+    // clique nos ícones também
     actions.addEventListener('click', function (event) {
       const icon = event.target.closest('.ico-acordeon');
       if (!icon) return;
       toggleItem();
     });
+
+    // HOVER (apenas desktop / pointer fino): abre/troca sem precisar clicar
+    if (isFinePointer) {
+      item.addEventListener('mouseenter', function () {
+        openItemExclusive(item);
+      });
+    }
   });
 
-  // estado inicial: primeira imagem visível (se existir)
+  // estado inicial: primeira imagem visível e primeiro acordeon aberto
   if (items.length && imageItems.length) {
-    showImageForItem(items[0]);
+    openItemExclusive(items[0]);
   }
 });
