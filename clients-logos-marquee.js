@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!originals.length) return;
 
     // duplica várias vezes pra formar um loop longo
-    const repeatCount = 6; // ajusta se quiser mais/menos “fila”
+    const repeatCount = 8; // ajusta se quiser mais/menos “fila”
     const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < repeatCount; i++) {
@@ -42,13 +42,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (totalWidth <= containerWidth * 1.2) return;
 
     // velocidade em px/s
-    const pxPerSecond = 40; // deixa mais rápido/lento ajustando aqui
+    const pxPerSecond = 30; // deixa mais rápido/lento ajustando aqui
     const distance = totalWidth / 2; // metade pro loop fechar bem
     const duration = distance / pxPerSecond; // segundos
 
     const animName = 'logosMarquee_' + index;
-    const from = '0';
-    const to = '-' + distance + 'px';
+    const from = `-${distance}px`;
+    const to   = `0`;
 
     // remove style antigo se existir
     const styleId = 'style-logos-marquee-' + index;
