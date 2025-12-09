@@ -1,0 +1,25 @@
+.w-select {
+  height: auto !important;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('https://cdn.prod.website-files.com/68d696d89d3d9a80b3add0b7/693476ba695f7f10805408ce_chevron-down.svg');
+  background-repeat: no-repeat;
+    background-position-x: calc(100% - 16px); /* direita com 16px de margem */
+  background-position-y: 50%; /* centralizado */
+}
+
+input#country_code {
+    border-radius: 16px;
+}
+
+.w-checkbox-input--inputType-custom.w--redirected-checked {
+    background-color: #F2E205 !important;
+    background-image: url(https://cdn.prod.website-files.com/68d696d89d3d9a80b3add0b7/693594ea805d012108b50a47_Line.svg);
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: 12px !important;
+}
