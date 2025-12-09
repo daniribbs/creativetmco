@@ -16,37 +16,33 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!originals.length) return;
 
     // duplica várias vezes pra formar um loop longo
-    const repeatCount = 8; // ajusta se quiser mais/menos “fila”
+    const repeatCount = 8;
     const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < repeatCount; i++) {
-      originals.forEach(function (item) {
-        fragment.appendChild(item.cloneNode(true));
-      });
+      originals.forEach(item => fragment.appendChild(item.cloneNode(true)));
     }
 
-    // substitui o conteúdo do track pelos clones
     track.innerHTML = '';
     track.appendChild(fragment);
 
-    // estilos mínimos via JS (pode levar pro CSS se preferir)
     wrap.style.overflow = 'hidden';
     track.style.display = 'flex';
     track.style.flexWrap = 'nowrap';
 
-    // calcula larguras depois de popular
     const totalWidth = track.scrollWidth;
     const containerWidth = wrap.offsetWidth || 1;
 
-    // se a largura total não for muito maior que o container, nem anima
     if (totalWidth <= containerWidth * 1.2) return;
 
-    // velocidade em px/s
-    const pxPerSecond = 30; // deixa mais rápido/lento ajustando aqui
-    const distance = totalWidth / 2; // metade pro loop fechar bem
-    const duration = distance / pxPerSecond; // segundos
+    // velocidade ↓ mais lenta (antes 40)
+    const pxPerSecond = 30;
+    const distance = totalWidth / 2;
+    const duration = distance / pxPerSecond;
 
     const animName = 'logosMarquee_' + index;
+
+    // agora começamos deslocado para a direita entrar pela esquerda
     const from = `-${distance}px`;
     const to   = `0`;
 
@@ -65,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     document.head.appendChild(styleTag);
 
-    // aplica animação diretamente no track
+    // aplica animação
     track.style.animation = `${animName} ${duration}s linear infinite`;
   });
 });
