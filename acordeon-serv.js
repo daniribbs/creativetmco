@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const items = Array.from(document.querySelectorAll('.service-item-acordeon'));
   const imageItems = Array.from(document.querySelectorAll('.image-service-acordeon-item'));
-  const isFinePointer = window.matchMedia && window.matchMedia('(pointer:fine)').matches;
 
   // função para mostrar a imagem correspondente ao item
   function showImageForItem(item) {
@@ -65,16 +64,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // abre um item e fecha todos os outros
+  function closeAllItems() {
+    items.forEach(function (it) {
+      it.classList.remove('is-open');
+    });
+  }
+
   function openItemExclusive(item) {
     if (!item) return;
-    items.forEach(function (it) {
-      if (it !== item) it.classList.remove('is-open');
-    });
-    if (!item.classList.contains('is-open')) {
-      item.classList.add('is-open');
-    }
+    closeAllItems();
+    item.classList.add('is-open');
     showImageForItem(item);
+  }
+
+  function toggleItem(item) {
+    const isOpen = item.classList.contains('is-open');
+
+    if (isOpen) {
+      // se já estiver aberto, fecha (nenhum aberto) e mantém a imagem atual
+      item.classList.remove('is-open');
+    } else {
+      // abre este e fecha os outros + atualiza imagem
+      openItemExclusive(item);
+    }
   }
 
   items.forEach(function (item) {
@@ -83,41 +95,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!contentTrigger || !actions) return;
 
-    function toggleItem() {
-      const isOpen = item.classList.contains('is-open');
-
-      if (isOpen) {
-        // se clicar num item já aberto, fecha (fica tudo fechado, mas mantém a última imagem)
-        item.classList.remove('is-open');
-      } else {
-        // abre este e fecha os outros
-        openItemExclusive(item);
-      }
-    }
-
-    // clique no conteúdo
-    contentTrigger.addEventListener('click', toggleItem);
-
-    // clique nos ícones
-    actions.addEventListener('click', function (event) {
-      const icon = event.target.closest('.ico-acordeon');
-      if (!icon) return;
-      toggleItem();
+    // clique na área de conteúdo
+    contentTrigger.addEventListener('click', function (e) {
+      e.preventDefault();
+      toggleItem(item);
     });
 
-    // HOVER (desktop): abre/troca sem precisar clicar
-    if (isFinePointer) {
-      item.addEventListener('mouseenter', function () {
-        openItemExclusive(item);
-      });
-    }
+    // clique nos ícones
+    actions.addEventListener('click', function (e) {
+      const icon = e.target.closest('.ico-acordeon');
+      if (!icon) return;
+      e.preventDefault();
+      toggleItem(item);
+    });
   });
 
   // estado inicial:
   // - todos os acordeons fechados
   // - somente a primeira imagem visível
   if (items.length && imageItems.length) {
-    showImageForItem(items[0]); // mantém a lógica "primeira imagem por padrão"
-    // não adicionamos .is-open em nenhum item
+    showImageForItem(items[0]); // imagem inicial = primeira
+    // nenhum .is-open adicionado
   }
 });
