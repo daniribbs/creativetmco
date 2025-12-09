@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!originals.length) return;
 
     // duplica várias vezes pra formar um loop longo
-    const repeatCount = 6; // ajusta se quiser mais/menos “fila”
+    const repeatCount = 8; // ajusta se quiser mais/menos “fila”
     const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < repeatCount; i++) {
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (totalWidth <= containerWidth * 1.2) return;
 
     // velocidade em px/s
-    const pxPerSecond = 40; // deixa mais rápido/lento ajustando aqui
+    const pxPerSecond = 30; // deixa mais rápido/lento ajustando aqui
     const distance = totalWidth / 2; // metade pro loop fechar bem
     const duration = distance / pxPerSecond; // segundos
 
