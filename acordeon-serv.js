@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const imageItems = Array.from(document.querySelectorAll('.image-service-acordeon-item'));
   const isFinePointer = window.matchMedia && window.matchMedia('(pointer:fine)').matches;
 
-  // função para mostrar a imagem correspondente ao item ativo
+  // função para mostrar a imagem correspondente ao item
   function showImageForItem(item) {
     if (!imageItems.length || !item) return;
 
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const isOpen = item.classList.contains('is-open');
 
       if (isOpen) {
-        // se clicar no que já está aberto, fecha (nenhum aberto)
+        // se clicar num item já aberto, fecha (fica tudo fechado, mas mantém a última imagem)
         item.classList.remove('is-open');
       } else {
         // abre este e fecha os outros
@@ -95,17 +95,17 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // clique no conteúdo abre/fecha
+    // clique no conteúdo
     contentTrigger.addEventListener('click', toggleItem);
 
-    // clique nos ícones também
+    // clique nos ícones
     actions.addEventListener('click', function (event) {
       const icon = event.target.closest('.ico-acordeon');
       if (!icon) return;
       toggleItem();
     });
 
-    // HOVER (apenas desktop / pointer fino): abre/troca sem precisar clicar
+    // HOVER (desktop): abre/troca sem precisar clicar
     if (isFinePointer) {
       item.addEventListener('mouseenter', function () {
         openItemExclusive(item);
@@ -113,8 +113,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // estado inicial: primeira imagem visível e primeiro acordeon aberto
+  // estado inicial:
+  // - todos os acordeons fechados
+  // - somente a primeira imagem visível
   if (items.length && imageItems.length) {
-    openItemExclusive(items[0]);
+    showImageForItem(items[0]); // mantém a lógica "primeira imagem por padrão"
+    // não adicionamos .is-open em nenhum item
   }
 });
