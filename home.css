@@ -3,10 +3,10 @@
   width: 100%;
 }
 
-.logo-lista {
+/*.logo-lista {
   animation: marquee-right 60s linear infinite;
   will-change: transform; 
-}
+}*/
 
 .portfolio-list-image {
   display: flex;
