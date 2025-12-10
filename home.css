@@ -31,7 +31,7 @@
   to   { transform: translateX(50%); }
 }
 
-h1.heading.hero.home {
+/*h1.heading.hero.home {
 	background-size: 300% 300%; 
 }
 
@@ -39,7 +39,7 @@ h1.heading.hero.home {
   0%   { background-position: 100% 50%; }   /* canto direito */
   50%  { background-position: 75% 70%; }  /* baixo do canto */
   100% { background-position: 100% 50%; }   /* fecha o ciclo */
-}
+}*/
 
 
 .logo-wrap:before {
