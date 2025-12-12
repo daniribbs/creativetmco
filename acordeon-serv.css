@@ -1,0 +1,21 @@
+@keyframes accordionFadeUp {
+  0% {
+    opacity: 0.2;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.service-item-acordeon .acordeon-serv-description {
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.service-item-acordeon.is-open .acordeon-serv-description {
+  display: block;
+  animation: accordionFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
