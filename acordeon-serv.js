@@ -1,38 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
-
-  /* --- CSS embutido temporariamente --- */
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .service-item-acordeon .acordeon-serv-description {
-      display: none;
-    }
-    .service-item-acordeon .ico-acordeon.close {
-      display: none;
-    }
-    .service-item-acordeon.is-open .acordeon-serv-description {
-      display: block;
-    }
-    .service-item-acordeon.is-open .ico-acordeon.open {
-      display: none;
-    }
-    .service-item-acordeon.is-open .ico-acordeon.close {
-      display: block;
-    }
-
-    /* imagens do acordeon: por padrão todas escondidas, só a .is-visible aparece */
-    .image-service-acordeon-item {
-      display: none;
-    }
-    .image-service-acordeon-item.is-visible {
-      display: block;
-    }
-  `;
-  document.head.appendChild(style);
-
   const items = Array.from(document.querySelectorAll('.service-item-acordeon'));
   const imageItems = Array.from(document.querySelectorAll('.image-service-acordeon-item'));
 
-  // função para mostrar a imagem correspondente ao item
+  // Mostra a imagem correspondente ao item
   function showImageForItem(item) {
     if (!imageItems.length || !item) return;
 
@@ -49,9 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const matchBySlug    = imgSlug && itemSlug && imgSlug === itemSlug;
       const matchByService = imgService && itemTitle && imgService === itemTitle;
 
-      if (!target && (matchBySlug || matchByService)) {
-        target = imgItem;
-      }
+      if (!target && (matchBySlug || matchByService)) target = imgItem;
     });
 
     if (!target) target = imageItems[0];
@@ -59,9 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
     imageItems.forEach(function (imgItem) {
       imgItem.classList.remove('is-visible');
     });
-    if (target) {
-      target.classList.add('is-visible');
-    }
+
+    target.classList.add('is-visible');
   }
 
   function closeAllItems() {
@@ -81,40 +48,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const isOpen = item.classList.contains('is-open');
 
     if (isOpen) {
-      // se já estiver aberto, fecha (nenhum aberto) e mantém a imagem atual
+      // fecha (nenhum aberto) e mantém a imagem atual
       item.classList.remove('is-open');
-    } else {
-      // abre este e fecha os outros + atualiza imagem
-      openItemExclusive(item);
+      return;
     }
+
+    // abre este e fecha os outros + atualiza imagem
+    openItemExclusive(item);
   }
 
   items.forEach(function (item) {
     const contentTrigger = item.querySelector('.acordeon-service-content');
     const actions = item.querySelector('.actions-acordoen');
 
-    if (!contentTrigger || !actions) return;
+    if (contentTrigger) {
+      contentTrigger.addEventListener('click', function (e) {
+        // se tiver <a> dentro e você NÃO quiser bloquear navegação, remova o preventDefault
+        e.preventDefault();
+        toggleItem(item);
+      });
+    }
 
-    // clique na área de conteúdo
-    contentTrigger.addEventListener('click', function (e) {
-      e.preventDefault();
-      toggleItem(item);
-    });
-
-    // clique nos ícones
-    actions.addEventListener('click', function (e) {
-      const icon = e.target.closest('.ico-acordeon');
-      if (!icon) return;
-      e.preventDefault();
-      toggleItem(item);
-    });
+    if (actions) {
+      actions.addEventListener('click', function (e) {
+        const icon = e.target.closest('.ico-acordeon');
+        if (!icon) return;
+        e.preventDefault();
+        toggleItem(item);
+      });
+    }
   });
 
   // estado inicial:
-  // - todos os acordeons fechados
-  // - somente a primeira imagem visível
+  // - todos fechados
+  // - primeira imagem visível (se existir)
   if (items.length && imageItems.length) {
-    showImageForItem(items[0]); // imagem inicial = primeira
-    // nenhum .is-open adicionado
+    showImageForItem(items[0]);
   }
 });
