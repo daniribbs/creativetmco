@@ -19,3 +19,26 @@
   display: block;
   animation: accordionFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+.service-item-acordeon .acordeon-serv-description {
+  display: none;
+}
+.service-item-acordeon .ico-acordeon.close {
+  display: none;
+}
+.service-item-acordeon.is-open .acordeon-serv-description {
+  display: block;
+}
+.service-item-acordeon.is-open .ico-acordeon.open {
+  display: none;
+}
+.service-item-acordeon.is-open .ico-acordeon.close {
+  display: block;
+}
+
+/* imagens do acordeon: por padrão todas escondidas, só a .is-visible aparece */
+.image-service-acordeon-item {
+  display: none;
+}
+.image-service-acordeon-item.is-visible {
+  display: block;
+}
