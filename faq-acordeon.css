@@ -1,0 +1,31 @@
+.card-faq .content-acordeon {
+  position: relative;
+}
+
+.card-faq .acordeon-title,
+.card-faq .buttons-acordeon {
+  cursor: pointer;
+}
+
+.card-faq .acordeon-description {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(10px);
+  overflow: hidden;
+  transition:
+    opacity 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    max-height 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.card-faq .acordeon-ico.open { display: block; }
+.card-faq .acordeon-ico.close { display: none; }
+
+.card-faq .content-acordeon.is-open .acordeon-description {
+  opacity: 1;
+  max-height: var(--state-h, 220px);
+  transform: translateY(0);
+}
+
+.card-faq .content-acordeon.is-open .acordeon-ico.open { display: none; }
+.card-faq .content-acordeon.is-open .acordeon-ico.close { display: block; }
