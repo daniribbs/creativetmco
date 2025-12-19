@@ -75,12 +75,6 @@
       }
     }
 
-    // Helper: fecha tudo (mega + overlays)
-    function closeAllMenus(){
-      closeMega(mega, servA);
-      document.body.classList.remove('tmco-mobile-open','tmco-services-open');
-    }
-
     // Trigger "Serviços" (desktop)
     if (servA && mega){
       servA.setAttribute('aria-haspopup','true');
@@ -123,20 +117,6 @@
         if (!it || !mega.contains(it)) return;
         const slug = it.getAttribute('data-slug') || '';
         if (slug && slug !== lastSlug) activateItem(it, items, panels);
-      });
-
-      // Fechar menu ao clicar em links âncora dentro da mega (ex: #contato)
-      bindOnce(mega, 'click', (e)=>{
-        const a = e.target.closest('a[href]');
-        if (!a) return;
-
-        const href = (a.getAttribute('href') || '').trim();
-
-        // fecha só quando for hash "de verdade" (ex: #contato). Não fecha em href="#"
-        if (href.startsWith('#') && href.length > 1){
-          closeAllMenus();
-          // sem preventDefault -> mantém o scroll até a âncora
-        }
       });
     }
 
@@ -188,38 +168,16 @@
       });
     }
 
-    // Clicar no fundo dos overlays + fechar ao clicar em âncora (#...) nos overlays
+    // Clicar no fundo dos overlays
     if (ovStd){
-      bindOnce(ovStd, 'click', (e)=>{
-        const a = e.target.closest('a[href^="#"]');
-        if (a && a.getAttribute('href').trim().length > 1){
-          closeAllMenus();
-          return;
-        }
-        if (e.target === ovStd) closeAllMenus();
-      });
+      bindOnce(ovStd, 'click', (e)=>{ if (e.target === ovStd) document.body.classList.remove('tmco-mobile-open','tmco-services-open'); });
     }
     if (ovServ){
-      bindOnce(ovServ, 'click', (e)=>{
-        const a = e.target.closest('a[href^="#"]');
-        if (a && a.getAttribute('href').trim().length > 1){
-          closeAllMenus();
-          return;
-        }
-        // clique no fundo do overlay de serviços volta pro overlay principal:
-        if (e.target === ovServ){
-          document.body.classList.remove('tmco-services-open');
-          document.body.classList.add('tmco-mobile-open');
-        }
-      });
+      bindOnce(ovServ, 'click', (e)=>{ if (e.target === ovServ){ document.body.classList.remove('tmco-services-open'); document.body.classList.add('tmco-mobile-open'); }});
     }
 
     // ESC + clique fora fecham mega/overlays
-    bindOnce(document, 'keydown', (e)=>{ 
-      if (e.key === 'Escape' || e.key === 'Esc'){
-        closeAllMenus();
-      }
-    });
+    bindOnce(document, 'keydown', (e)=>{ if (e.key === 'Escape' || e.key === 'Esc'){ closeMega(mega, servA); document.body.classList.remove('tmco-mobile-open','tmco-services-open'); }});
     bindOnce(document, 'click',   (e)=>{
       if (!mega || !mega.classList.contains('is-open')) return;
       const insideMega = mega.contains(e.target);
