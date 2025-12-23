@@ -119,7 +119,7 @@
 
 
 .logo-wrap:before {
-    background: linear-gradient(90deg, #20201F 5%, transparent 50%, #20201F 95%);
+    background: linear-gradient(90deg, #21201a 5%, transparent 50%, #21201a 95%);
     display: block;
     content: '';
     z-index: 999 !important;
