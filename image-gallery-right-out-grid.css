@@ -1,0 +1,131 @@
+:root{
+  --grid-width: 1216px;
+
+  --gallery-gap: 32px;
+  --gallery-max: 625px;
+  --radius: 24px;
+
+  --progress-ms: 6500ms;
+
+  --dot-w: 140px;
+  --dot-h: 8px;
+  --dot-bg: #322F2E;
+  --dot-fill: #F2E205;
+
+  --gallery-size: min(var(--gallery-max), calc((var(--grid-width) - var(--gallery-gap)) / 2));
+}
+
+
+.gallery-case{ overflow: hidden; }
+
+.gallery-case-wrap{
+  box-sizing: border-box;
+  padding-right: 0;
+}
+
+.gallery-case_cards{
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  transition: transform 550ms cubic-bezier(.2,.8,.2,1);
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+
+  justify-content: flex-start !important;
+  align-items: stretch;
+
+  touch-action: pan-y;
+  cursor: grab;
+}
+.gallery-case_cards.is-dragging{ cursor: grabbing; }
+
+.gallery-case_cards,
+.gallery-case_cards *{
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.gallery-case_card,
+.gallery-case_card.w-col,
+.gallery-case_card.w-col-4{
+  float: none !important;
+  width: auto !important;
+  flex: 0 0 auto;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.gallery-case_card{
+  width: var(--gallery-size);
+  height: var(--gallery-size);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gallery-case_card:not(:last-child){ margin-right: var(--gallery-gap); }
+.gallery-case_card:last-child{ margin-right: 0; }
+
+.gallery-case_card img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none; 
+}
+
+.gallery-case_ui{
+  align-items: center;
+}
+
+.gallery-case_dots{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.gallery-dot{
+  width: var(--dot-w);
+  height: var(--dot-h);
+  background: var(--dot-bg);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.gallery-dot-fill{
+  position: absolute;
+  inset: 0;
+  background: var(--dot-fill);
+  transform: translateX(-100%);
+}
+
+.gallery-dot.is-active .gallery-dot-fill{
+  animation: dotProgress var(--progress-ms) linear forwards;
+}
+
+@keyframes dotProgress{
+  from{ transform: translateX(-100%); }
+  to  { transform: translateX(0%); }
+}
+
+.arrow-slider{
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 991px){
+  :root{
+    --gallery-gap: 16px;
+    --dot-w: 88px;
+
+    --grid-width: calc(100vw - 32px);
+    --gallery-size: min(var(--gallery-max), var(--grid-width));
+  }
+
+  .gallery-case_dots{ display: none !important; }
+}
