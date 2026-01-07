@@ -36,6 +36,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const isMobile = () => window.matchMedia('(max-width: 991px)').matches;
 
+    // ====== VIEWPORT GATE (autoplay só no viewport) ======
+    const VIEW_RATIO = 0.25; // ajuste: 0.15 começa mais cedo / 0.6 mais tarde
+    let isInView = false;
+    let isReady  = false;
+
+    function stopAutoplay(){
+      autoplayToken++;
+      if (timer) clearTimeout(timer);
+      timer = null;
+
+      // opcional: mata o fill do dot ao sair da viewport
+      if (!isMobile() && dots.length){
+        dots.forEach(d => d.classList.remove('is-active'));
+      }
+    }
+
+    function ensureAutoplay(){
+      if (!isReady) return;
+      if (!isInView) return;
+      if (document.hidden) return;
+      restartAutoplay();
+    }
+
+    // Observer por instância
+    if ('IntersectionObserver' in window){
+      const io = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        isInView = !!(entry && entry.isIntersecting && entry.intersectionRatio >= VIEW_RATIO);
+
+        if (isInView) ensureAutoplay();
+        else stopAutoplay();
+      }, { threshold: [0, VIEW_RATIO, 0.6, 1] });
+
+      io.observe(root);
+    } else {
+      // fallback: sem IO -> roda normal
+      isInView = true;
+    }
+
     // suprime clique só após drag real
     let suppressClickUntil = 0;
     root.addEventListener('click', (e) => {
@@ -162,8 +201,10 @@ document.addEventListener('DOMContentLoaded', function () {
       active.classList.add('is-active');
     }
 
-    // ✅ autoplay confiável (não depende de animationend)
+    // ✅ autoplay confiável (não depende de animationend) + só no viewport
     function restartAutoplay(){
+      if (!isInView || document.hidden) return;
+
       autoplayToken++;
       if (timer) clearTimeout(timer);
       timer = null;
@@ -190,11 +231,11 @@ document.addEventListener('DOMContentLoaded', function () {
         focus = 0;
         index = 0;
         setTransform(0, false);
-        restartAutoplay();
+        ensureAutoplay();
         return;
       }
       applyFocus(focus + 1, true);
-      restartAutoplay();
+      ensureAutoplay();
     }
 
     function prev(){
@@ -204,17 +245,17 @@ document.addEventListener('DOMContentLoaded', function () {
         focus = slides.length - 1;
         index = indexFromFocus(focus);
         setTransform(index, false);
-        restartAutoplay();
+        ensureAutoplay();
         return;
       }
       applyFocus(focus - 1, true);
-      restartAutoplay();
+      ensureAutoplay();
     }
 
     function goToCard(i){
       if (!ensureMeasured()) return;
       applyFocus(i, true);
-      restartAutoplay();
+      ensureAutoplay();
     }
 
     // setas
@@ -254,8 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
       startY = e.clientY;
       startTranslate = getCurrentTranslate();
 
-      autoplayToken++;
-      if (timer) clearTimeout(timer);
+      stopAutoplay();
     }
 
     function onPointerMove(e){
@@ -301,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
         focus = index; // leftmost vira o foco
       }
 
-      restartAutoplay();
+      ensureAutoplay();
       try { track.releasePointerCapture(e.pointerId); } catch(_) {}
     }
 
@@ -320,7 +360,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       index = indexFromFocus(focus);
       setTransform(index, false);
-      restartAutoplay();
+
+      isReady = true;
+      ensureAutoplay();
     }
 
     waitImages().then(() => {
@@ -330,10 +372,8 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('resize', initLayout);
 
     document.addEventListener('visibilitychange', () => {
-      autoplayToken++;
-      if (timer) clearTimeout(timer);
-      timer = null;
-      if (!document.hidden) restartAutoplay();
+      if (document.hidden) stopAutoplay();
+      else ensureAutoplay();
     });
 
     if ('ResizeObserver' in window){
