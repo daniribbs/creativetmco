@@ -1,0 +1,159 @@
+:root{
+  --grid-width: 1216px;   /* JS atualiza no desktop/tablet */
+  --gallery-gap: 24px;
+  --radius: 24px;
+
+  --progress-ms: 6500ms;
+
+  --dot-w: 140px;
+  --dot-h: 8px;
+  --dot-bg: #322F2E;
+  --dot-fill: #F2E205;
+
+  /* 3 cards no grid */
+  --card-w: calc((var(--grid-width) - (var(--gallery-gap) * 2)) / 3);
+}
+
+/* não corta “peek” */
+.gallery-rel .rel-cases-wrap,
+.gallery-rel .rel-cases-list{ overflow: visible; }
+
+/* Track */
+.gallery-rel .rel-cases-list{
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  transition: transform 550ms cubic-bezier(.2,.8,.2,1);
+
+  justify-content: flex-start !important;
+  align-items: stretch;
+
+  touch-action: pan-y;
+  cursor: default;
+}
+.gallery-rel .rel-cases-list.is-dragging{ cursor: default; }
+
+/* evita seleção durante drag */
+.gallery-rel .rel-cases-list,
+.gallery-rel .rel-cases-list *{
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Cards */
+.gallery-rel .rel-cases-item,
+.gallery-rel .rel-cases-item.w-col,
+.gallery-rel .rel-cases-item.w-col-6{
+  float: none !important;
+
+  width: var(--card-w) !important;
+  max-width: none !important;
+  flex: 0 0 auto !important;
+
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
+  border-radius: var(--radius);
+  /*overflow: hidden;*/
+}
+
+/* Gap */
+.gallery-rel .rel-cases-item:not(:last-child){ margin-right: var(--gallery-gap); }
+.gallery-rel .rel-cases-item:last-child{ margin-right: 0; }
+
+/* UI */
+.gallery-rel .gallery-case_ui{
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.gallery-rel .gallery-case_dots{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.gallery-rel .gallery-dot{
+  width: var(--dot-w);
+  height: var(--dot-h);
+  background: var(--dot-bg);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gallery-rel .gallery-dot-fill{
+  position: absolute;
+  inset: 0;
+  background: var(--dot-fill);
+  transform: translateX(-100%);
+}
+
+.gallery-rel .gallery-dot.is-active .gallery-dot-fill{
+  animation: dotProgress var(--progress-ms) linear forwards;
+}
+
+@keyframes dotProgress{
+  from{ transform: translateX(-100%); }
+  to  { transform: translateX(0%); }
+}
+
+/* Arrows */
+.gallery-rel .arrow-slider{
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* texto 2 linhas + reticências */
+.rel-cases-item .info-case-text{
+  line-height: 1.4em !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 991px){
+  :root{
+    --gallery-gap: 16px;     /* espaço entre cards */
+    --mobile-left: 16px;    /* padding esquerdo */
+    --mobile-peek: 64px;    /* “reserva” pra aparecer o próximo card (inclui o gap) */
+  }
+
+  /* full-bleed (100vw) */
+  .gallery-rel{
+    width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    overflow: visible !important;
+  }
+
+  /* esquerda 16px, direita colada */
+  .gallery-rel .rel-cases-wrap{
+    padding-left: var(--mobile-left) !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  /* 1 card inteiro + peek do próximo */
+  .gallery-rel .rel-cases-item,
+  .gallery-rel .rel-cases-item.w-col,
+  .gallery-rel .rel-cases-item.w-col-6{
+    width: calc(100vw - var(--mobile-left) - var(--mobile-peek)) !important;
+  }
+
+  /* sem dots no mobile */
+  .gallery-rel .gallery-case_dots{ display: none !important; }
+}
