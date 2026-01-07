@@ -95,7 +95,7 @@
   will-change: transform; 
 }*/
 
-.portfolio-list-image {
+/*.portfolio-list-image {
   display: flex;
   animation: marquee-left 60s linear infinite;
   will-change: transform; 
@@ -115,7 +115,7 @@
 @keyframes marquee-right {
   from { transform: translateX(0); }
   to   { transform: translateX(50%); }
-}
+}*/
 
 
 .logo-wrap:before {
