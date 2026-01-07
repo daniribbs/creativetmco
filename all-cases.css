@@ -3,3 +3,22 @@ a.select-case-button.w-inline-block.is-active {
     background: var(--neutral-background-bg-subtle_01, #20201F);
     box-shadow: 0 0 0 4px var(--overlays-overlay-black-2, rgba(252, 252, 252, 0.12)), 0 1px 2px 0 var(--overlays-overlay-black-1, rgba(252, 252, 252, 0.04));
 }
+
+
+.cases-image-gallery{
+  right: 0;         
+  overflow: hidden;
+}
+
+.cases-image-gallery::before{
+  content:"";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 240px;        
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(90deg,
+    rgba(32, 32, 31, 1) 0%,
+    rgba(32, 32, 31, 0) 100%
+  );
+}
