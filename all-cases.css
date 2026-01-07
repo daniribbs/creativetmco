@@ -1,0 +1,5 @@
+a.select-case-button.w-inline-block.is-active {
+    border-radius: var(--pill, 999px);
+    background: var(--neutral-background-bg-subtle_01, #20201F);
+    box-shadow: 0 0 0 4px var(--overlays-overlay-black-2, rgba(252, 252, 252, 0.12)), 0 1px 2px 0 var(--overlays-overlay-black-1, rgba(252, 252, 252, 0.04));
+}
