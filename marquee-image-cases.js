@@ -1,22 +1,11 @@
 (() => {
-  if (window.__tmcoMarqueeFinalSafeV2) return;
-  window.__tmcoMarqueeFinalSafeV2 = true;
+  if (window.__tmcoMarqueeMultiV1) return;
+  window.__tmcoMarqueeMultiV1 = true;
 
   const SPEED = 45;         // px/s
   const START_DELAY = 600;  // ms: começa parado e engata depois
   const REBUILD_AT  = 900;  // ms: recalibra 1x após “assentar”
-  const DT_MAX = 1/60 * 2;  // clamp: no máx ~33ms por frame
-
-  function boot(){
-    const gallery = document.querySelector('.cases-image-gallery');
-    if (!gallery) return;
-
-    const first  = gallery.querySelector('.portfolio-wrapper-image.first-line');
-    const second = gallery.querySelector('.portfolio-wrapper-image.second-line');
-
-    if (first)  initLine(first,  +1); // esquerda -> direita
-    if (second) initLine(second, -1); // direita -> esquerda
-  }
+  const DT_MAX = (1/60) * 2; // clamp ~33ms
 
   window.addEventListener('load', () => {
     boot();
@@ -24,19 +13,61 @@
     setTimeout(boot, 800);
   });
 
-  function initLine(wrapper, dirSign){
-    const track = wrapper.querySelector('.portfolio-list-image.case-page');
-    if (!track) return;
-    if (track.dataset.tmcoRunning === '1') return;
-    track.dataset.tmcoRunning = '1';
+  function boot(){
+    // 1) NOVA seção full width
+    document.querySelectorAll('.full-sec').forEach(sec => {
+      initGalleryInSection(sec, {
+        wrapperSel: '.portfolio-wrapper-image',
+        secondWrapperSel: '.portfolio-wrapper-image.second-line',
+        trackSel: '.portfolio-list-image',
+        itemSel: '.portfolio-item-image'
+      });
+    });
 
+    // 2) Seção antiga (se ainda existir)
+    document.querySelectorAll('.cases-image-gallery').forEach(sec => {
+      initGalleryInSection(sec, {
+        wrapperSel: '.portfolio-wrapper-image',
+        secondWrapperSel: '.portfolio-wrapper-image.second-line',
+        trackSel: '.portfolio-list-image.case-page, .portfolio-list-image',
+        itemSel: '.portfolio-item-image.case-page, .portfolio-item-image'
+      });
+    });
+  }
+
+  function initGalleryInSection(section, cfg){
+    const wrappers = Array.from(section.querySelectorAll(cfg.wrapperSel));
+    if (!wrappers.length) return;
+
+    const second = section.querySelector(cfg.secondWrapperSel) || wrappers[1] || null;
+    const first  = wrappers.find(w => w !== second) || wrappers[0] || null;
+
+    if (first)  initLine(first,  +1, cfg); // esquerda -> direita
+    if (second) initLine(second, -1, cfg); // direita -> esquerda
+  }
+
+  function initLine(wrapper, dirSign, cfg){
+    const track = wrapper.querySelector(cfg.trackSel);
+    if (!track) return;
+
+    // evita duplicar init
+    const key = 'tmcoRunning';
+    if (track.dataset[key] === '1') return;
+    track.dataset[key] = '1';
+
+    // garante estilos essenciais (sem depender do Webflow)
     track.style.transition = 'none';
     track.style.backfaceVisibility = 'hidden';
+    track.style.transform = 'translate3d(0,0,0)';
+    track.style.willChange = 'transform';
+    track.style.display = 'flex';
+    track.style.flexWrap = 'nowrap';
 
-    const originals = Array.from(track.children);
+    // itens originais = filhos que batem com itemSel (ou todos os filhos se não achar)
+    let originals = Array.from(track.children).filter(el => el.matches(cfg.itemSel));
+    if (!originals.length) originals = Array.from(track.children);
     if (!originals.length) return;
 
-    // força não encolher
     originals.forEach(it => {
       it.style.flex = '0 0 auto';
       it.style.flexShrink = '0';
@@ -51,7 +82,6 @@
     }
 
     function segmentWidth(){
-      // soma widths + gaps
       let w = 0;
       originals.forEach((el, i) => {
         w += outerW(el);
@@ -69,6 +99,7 @@
       let totalW = segW;
       let safety = 0;
 
+      // 3x viewport pra arrastar sem “buraco”
       while (totalW < vw * 3 && safety < 60) {
         const frag = document.createDocumentFragment();
         originals.forEach(o => {
@@ -88,7 +119,7 @@
 
     // ---- state ----
     let segW = fillClones();
-    let x = (dirSign > 0) ? -segW : 0; // posição inicial (parado)
+    let x = (dirSign > 0) ? -segW : 0; // start parado
     let lastTs = null;
 
     let dragging = false;
@@ -103,16 +134,14 @@
       while (x <= -segW) x += segW;
     }
 
-    // começa parado
     wrap();
     render();
 
-    // animação com warm-up (evita “tranco” no primeiro movimento)
     let started = false;
     let warmUntil = 0;
 
     function tick(ts){
-      if (!started) return; // segurança
+      if (!started) return;
 
       if (lastTs === null) {
         lastTs = ts;
@@ -120,7 +149,6 @@
         return;
       }
 
-      // warm-up: alguns frames sem mover (layout “assenta”)
       if (ts < warmUntil) {
         lastTs = ts;
         requestAnimationFrame(tick);
@@ -129,7 +157,7 @@
 
       let dt = (ts - lastTs) / 1000;
       if (dt < 0) dt = 0;
-      if (dt > DT_MAX) dt = DT_MAX; // clamp real
+      if (dt > DT_MAX) dt = DT_MAX;
       lastTs = ts;
 
       if (!dragging) {
@@ -141,10 +169,9 @@
       requestAnimationFrame(tick);
     }
 
-    // start suave
+    // start suave (parado -> move)
     setTimeout(() => {
       requestAnimationFrame((t0) => {
-        // 2 frames “quietos” + 120ms de warm-up
         warmUntil = t0 + 120;
         lastTs = null;
         started = true;
@@ -153,21 +180,16 @@
       });
     }, START_DELAY);
 
-    // rebuild 1x sem “pulo”: preserva a fração da posição no loop
+    // rebuild 1x preservando posição relativa (sem “pulo”)
     setTimeout(() => {
       const oldSegW = segW || 1;
-
-      // fração atual dentro do loop (0..1)
       const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
 
       segW = fillClones();
 
-      // mantém a mesma posição relativa após mudar segW
       x = -frac * segW;
       wrap();
       render();
-
-      // zera dt (evita micro-pulo pós rebuild)
       lastTs = null;
     }, REBUILD_AT);
 
@@ -178,7 +200,7 @@
       wrapper.setPointerCapture?.(e.pointerId);
       downX = e.clientX;
       startX = x;
-      lastTs = null; // evita pulo ao soltar
+      lastTs = null;
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -192,7 +214,7 @@
     function end(){
       if (!dragging) return;
       dragging = false;
-      lastTs = null; // retoma suave, mesma direção
+      lastTs = null;
     }
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
