@@ -33,6 +33,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const isMobile = () => window.matchMedia('(max-width: 991px)').matches;
 
+  // ====== VISIBILITY / VIEWPORT ======
+  let isInView = false;
+  let isReady = false;
+
+  function stopAutoplay(){
+    if (timer) clearTimeout(timer);
+    timer = null;
+  }
+
+  function ensureAutoplay(){
+    if (!isReady) return;
+    if (!isInView) return;
+    restartAutoplay();
+  }
+
   function applyFullBleedAligned(){
     section.style.width = '';
     section.style.marginLeft = '';
@@ -41,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const left = Math.max(0, rect.left);
     gridWidth = Math.max(0, rect.width);
 
-    // manda a largura real do grid pro CSS (desktop e mobile também, ajuda)
     document.documentElement.style.setProperty('--grid-width', gridWidth + 'px');
 
     section.style.width = '100vw';
@@ -101,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function buildDots(){
-    // dots só no desktop (>= 992)
     if (!dotsWrap || isMobile()) return;
 
     dotsWrap.innerHTML = '';
@@ -146,6 +159,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function restartAutoplay(){
+    // só roda autoplay quando estiver na viewport
+    if (!isInView) return;
+
     if (timer) clearTimeout(timer);
     restartDotProgress();
     timer = setTimeout(() => next(), PROGRESS_MS);
@@ -182,8 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // binds setas
-  if (btnNext) btnNext.addEventListener('click', () => next());
-  if (btnPrev) btnPrev.addEventListener('click', () => prev());
+  if (btnNext) btnNext.addEventListener('click', () => { isInView = true; next(); });
+  if (btnPrev) btnPrev.addEventListener('click', () => { isInView = true; prev(); });
 
   [btnPrev, btnNext].forEach(btn => {
     if(!btn) return;
@@ -192,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
+        isInView = true;
         btn === btnNext ? next() : prev();
       }
     });
@@ -210,7 +227,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function onDown(e){
-    // não iniciar drag se clicou numa seta/dot
     const target = e.target;
     if (target && (target.closest('.arrow-slider') || target.closest('.gallery-dot'))) return;
 
@@ -222,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
     startY = p.y;
     startTranslate = currentTranslate;
 
-    if (timer) clearTimeout(timer);
+    stopAutoplay();
 
     track.classList.add('is-dragging');
     track.style.transition = 'none';
@@ -235,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const dx = p.x - startX;
     const dy = p.y - startY;
 
-    // decide intenção: horizontal vs vertical
     if (!lock){
       if (Math.abs(dx) > 6 || Math.abs(dy) > 6){
         lock = (Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
@@ -244,13 +259,9 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // se é vertical, não mexe no carrossel
     if (lock === 'y') return;
-
-    // se estamos no touch e é horizontal, previne scroll (só se cancelável)
     if (e.cancelable) e.preventDefault();
 
-    // arrasta (limitado)
     const minPx = -maxIndex * step;
     const maxPx = 0;
     const nextPx = Math.max(minPx, Math.min(maxPx, startTranslate + dx));
@@ -264,26 +275,22 @@ document.addEventListener('DOMContentLoaded', function () {
     isDown = false;
     track.classList.remove('is-dragging');
 
-    // se não travou em horizontal, só volta autoplay sem “snap”
     if (lock !== 'x'){
-      restartAutoplay();
+      ensureAutoplay();
       return;
     }
 
-    // snap
     index = clampIndexFromTranslate(currentTranslate);
     setTransform(index, true);
 
-    restartAutoplay();
+    ensureAutoplay();
   }
 
-  // Touch
   track.addEventListener('touchstart', onDown, { passive: true });
   track.addEventListener('touchmove', onMove, { passive: false });
   track.addEventListener('touchend', onUp, { passive: true });
   track.addEventListener('touchcancel', onUp, { passive: true });
 
-  // Mouse (desktop drag)
   track.addEventListener('mousedown', (e) => { e.preventDefault(); onDown(e); });
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
@@ -295,9 +302,31 @@ document.addEventListener('DOMContentLoaded', function () {
     step = getStep();
     recalcLimits();
 
-    buildDots(); // só desktop
+    buildDots();
     setTransform(index, false);
-    restartAutoplay();
+
+    isReady = true;
+
+    // ====== OBSERVER: autoplay só quando entrar na tela ======
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        // começa quando pelo menos 35% estiver visível (ajuste se quiser)
+        isInView = entry && entry.isIntersecting && entry.intersectionRatio >= 0.35;
+
+        if (isInView) {
+          restartAutoplay();
+        } else {
+          stopAutoplay();
+        }
+      }, { threshold: [0, 0.35, 0.6, 1] });
+
+      io.observe(section);
+    } else {
+      // fallback: se não tiver IO, roda normal
+      isInView = true;
+      restartAutoplay();
+    }
   });
 
   window.addEventListener('resize', () => {
@@ -308,20 +337,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     recalcLimits();
 
-    // rebuild dots (desktop only)
     if (dotsWrap) dotsWrap.innerHTML = '';
     dots = [];
     buildDots();
 
     setTransform(index, false);
-    restartAutoplay();
+    ensureAutoplay();
   });
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      if (timer) clearTimeout(timer);
+      stopAutoplay();
     } else {
-      restartAutoplay();
+      ensureAutoplay();
     }
   });
 });
