@@ -1,22 +1,11 @@
 (() => {
-  if (window.__tmcoMarqueeMultiV1) return;
-  window.__tmcoMarqueeMultiV1 = true;
+  if (window.__tmcoMarqueeMultiV2) return;
+  window.__tmcoMarqueeMultiV2 = true;
 
-  const SPEED = 45;           // px/s (autoplay)
-  const START_DELAY = 0;      // ms (coloque 0 pra já “estar rolando” desde o início)
+  const SPEED = 45;           // px/s
+  const START_DELAY = 600;    // ms
   const REBUILD_AT  = 900;    // ms (recalibra 1x após “assentar”)
   const DT_MAX = (1/60) * 2;  // clamp ~33ms
-
-  // ====== FOLLOW SCROLL ======
-  const FOLLOW_SCROLL = true;
-  const SCROLL_MULT = 0.35;      // px horizontais por px de scroll vertical (ajuste)
-  const SCROLL_DECAY = 0.86;     // inércia (0..1). menor = para mais rápido
-
-  // ====== START “NO MEIO DO LOOP” ======
-  // base diferente por linha (pra não ficar igual)
-  const START_PHASE_FIRST  = 0.38; // 0..1 do segmento
-  const START_PHASE_SECOND = 0.62; // 0..1 do segmento
-  const START_PHASE_JITTER = 0.22; // variação aleatória (0..1). Ex: 0.22 => +/- 0.11
 
   window.addEventListener('load', () => {
     boot();
@@ -66,7 +55,7 @@
     if (track.dataset[key] === '1') return;
     track.dataset[key] = '1';
 
-    // garante estilos essenciais
+    // estilos essenciais (independente do Webflow)
     track.style.transition = 'none';
     track.style.backfaceVisibility = 'hidden';
     track.style.transform = 'translate3d(0,0,0)';
@@ -74,8 +63,14 @@
     track.style.display = 'flex';
     track.style.flexWrap = 'nowrap';
 
-    let originals = Array.from(track.children).filter(el => el.matches(cfg.itemSel));
-    if (!originals.length) originals = Array.from(track.children);
+    // pega itens originais (não-clones)
+    let originals = Array.from(track.children)
+      .filter(el => !el.hasAttribute('data-tmco-clone'))
+      .filter(el => el.matches?.(cfg.itemSel));
+
+    if (!originals.length) {
+      originals = Array.from(track.children).filter(el => !el.hasAttribute('data-tmco-clone'));
+    }
     if (!originals.length) return;
 
     originals.forEach(it => {
@@ -83,7 +78,12 @@
       it.style.flexShrink = '0';
     });
 
-    const gap = parseFloat(getComputedStyle(track).gap || '0') || 0;
+    const computed = getComputedStyle(track);
+    const gap =
+      (parseFloat(computed.gap || '0') || 0) ||
+      (parseFloat(computed.columnGap || '0') || 0) ||
+      0;
+
     function outerW(el){
       const r = el.getBoundingClientRect().width || 0;
       return r > 0 ? r : (el.offsetWidth || 0);
@@ -99,9 +99,8 @@
         w += outerW(el);
         if (i < originals.length - 1) w += gap;
       });
-      // fallback: se ainda estiver “0” por causa de imagens, tenta scrollWidth
-      const sw = track.scrollWidth || 0;
-      return Math.max(1, w, sw);
+      // fallback se ainda não mediu (imagens)
+      return Math.max(1, w);
     }
 
     function fillClones(){
@@ -113,12 +112,12 @@
       let totalW = segW;
       let safety = 0;
 
-      // 4x viewport pra garantir sem “buraco” + start em phase
-      while (totalW < vw * 4 && safety < 80) {
+      // garante pelo menos 3x viewport (sem “buraco”)
+      while (totalW < vw * 3 && safety < 80) {
         const frag = document.createDocumentFragment();
         originals.forEach(o => {
           const c = o.cloneNode(true);
-          c.dataset.tmcoClone = '1';
+          c.setAttribute('data-tmco-clone', '1');
           c.style.flex = '0 0 auto';
           c.style.flexShrink = '0';
           frag.appendChild(c);
@@ -131,75 +130,33 @@
       return segW;
     }
 
-    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
     // ---- state ----
     let segW = fillClones();
+
+    // ✅ mantém a posição inicial “como está”
     let x = 0;
+
     let lastTs = null;
 
     let dragging = false;
     let downX = 0;
     let startX = 0;
 
-    // scroll follow
-    let lastScrollY = window.scrollY || 0;
-    let scrollVel = 0;
-
     function render(){
       track.style.transform = `translate3d(${x}px,0,0)`;
     }
+
     function wrap(){
+      // mantem x dentro de (-segW, 0] (ou equivalente) sem quebrar o loop
       while (x > 0) x -= segW;
       while (x <= -segW) x += segW;
     }
-
-    function getStartPhase(){
-      const saved = parseFloat(track.dataset.tmcoPhase || '');
-      if (Number.isFinite(saved)) return clamp(saved, 0.06, 0.94);
-
-      const base = (dirSign > 0) ? START_PHASE_FIRST : START_PHASE_SECOND;
-      const jitter = (Math.random() - 0.5) * START_PHASE_JITTER; // +/- jitter/2
-      const phase = clamp(base + jitter, 0.08, 0.92);
-
-      track.dataset.tmcoPhase = String(phase);
-      return phase;
-    }
-
-    // start “no meio” (não começa colado na esquerda)
-    const phase0 = getStartPhase();
-    x = -phase0 * segW;
 
     wrap();
     render();
 
     let started = false;
     let warmUntil = 0;
-
-    function applyScrollDelta(dy){
-      if (!FOLLOW_SCROLL) return;
-      if (!dy) return;
-
-      const dx = dy * SCROLL_MULT * dirSign;
-
-      // move imediatamente com o scroll (mesmo antes do autoplay começar)
-      x += dx;
-      wrap();
-      render();
-
-      // dá uma inércia suave depois do scroll
-      scrollVel += dx;
-      lastTs = null;
-    }
-
-    if (FOLLOW_SCROLL) {
-      window.addEventListener('scroll', () => {
-        const y = window.scrollY || 0;
-        const dy = y - lastScrollY;
-        lastScrollY = y;
-        applyScrollDelta(dy);
-      }, { passive: true });
-    }
 
     function tick(ts){
       if (!started) return;
@@ -222,18 +179,7 @@
       lastTs = ts;
 
       if (!dragging) {
-        // autoplay
         x += (dirSign * SPEED) * dt;
-
-        // scroll inertia
-        if (FOLLOW_SCROLL && scrollVel) {
-          x += scrollVel;
-
-          const decay = Math.pow(SCROLL_DECAY, dt * 60);
-          scrollVel *= decay;
-          if (Math.abs(scrollVel) < 0.02) scrollVel = 0;
-        }
-
         wrap();
         render();
       }
@@ -244,7 +190,7 @@
     // start suave
     setTimeout(() => {
       requestAnimationFrame((t0) => {
-        warmUntil = t0 + 80;
+        warmUntil = t0 + 120;
         lastTs = null;
         started = true;
         render();
@@ -291,7 +237,7 @@
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
 
-    // resize
+    // resize (recalcula clones mantendo posição)
     let to = null;
     window.addEventListener('resize', () => {
       clearTimeout(to);
@@ -301,10 +247,32 @@
 
         segW = fillClones();
         x = -frac * segW;
+
         wrap();
         render();
         lastTs = null;
       }, 150);
+    });
+
+    // imagens carregando depois podem alterar largura: recalibra 1x (sem mexer no comportamento)
+    let imgTo = null;
+    const imgs = Array.from(track.querySelectorAll('img'));
+    imgs.forEach(img => {
+      if (img.complete) return;
+      img.addEventListener('load', () => {
+        clearTimeout(imgTo);
+        imgTo = setTimeout(() => {
+          const oldSegW = segW || 1;
+          const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
+
+          segW = fillClones();
+          x = -frac * segW;
+
+          wrap();
+          render();
+          lastTs = null;
+        }, 80);
+      }, { once: true });
     });
   }
 })();
