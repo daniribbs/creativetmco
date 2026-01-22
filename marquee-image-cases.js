@@ -1,11 +1,16 @@
 (() => {
-  if (window.__tmcoMarqueeMultiV2) return;
-  window.__tmcoMarqueeMultiV2 = true;
+  if (window.__tmcoMarqueeMultiV1) return;
+  window.__tmcoMarqueeMultiV1 = true;
 
-  const SPEED = 45;           // px/s
-  const START_DELAY = 600;    // ms
-  const REBUILD_AT  = 900;    // ms (recalibra 1x após “assentar”)
-  const DT_MAX = (1/60) * 2;  // clamp ~33ms
+  const SPEED = 45;          // px/s
+  const START_DELAY = 600;   // ms
+  const REBUILD_AT  = 900;   // ms: recalibra 1x após “assentar”
+  const DT_MAX = (1/60) * 2; // clamp ~33ms
+
+  // ✅ início “no meio do loop” (evita começar colado na esquerda)
+  // use valores entre 0.12 e 0.88
+  const START_PHASE_FIRST  = 0.33; // 1ª linha
+  const START_PHASE_SECOND = 0.62; // 2ª linha
 
   window.addEventListener('load', () => {
     boot();
@@ -55,22 +60,18 @@
     if (track.dataset[key] === '1') return;
     track.dataset[key] = '1';
 
-    // estilos essenciais (independente do Webflow)
+    // garante estilos essenciais
     track.style.transition = 'none';
     track.style.backfaceVisibility = 'hidden';
     track.style.transform = 'translate3d(0,0,0)';
     track.style.willChange = 'transform';
     track.style.display = 'flex';
     track.style.flexWrap = 'nowrap';
+    track.style.justifyContent = 'flex-start'; // evita space-between/center “abrindo buracos”
 
-    // pega itens originais (não-clones)
-    let originals = Array.from(track.children)
-      .filter(el => !el.hasAttribute('data-tmco-clone'))
-      .filter(el => el.matches?.(cfg.itemSel));
-
-    if (!originals.length) {
-      originals = Array.from(track.children).filter(el => !el.hasAttribute('data-tmco-clone'));
-    }
+    // itens originais = filhos que batem com itemSel (ou todos os filhos se não achar)
+    let originals = Array.from(track.children).filter(el => el.matches(cfg.itemSel));
+    if (!originals.length) originals = Array.from(track.children);
     if (!originals.length) return;
 
     originals.forEach(it => {
@@ -78,52 +79,51 @@
       it.style.flexShrink = '0';
     });
 
-    const computed = getComputedStyle(track);
-    const gap =
-      (parseFloat(computed.gap || '0') || 0) ||
-      (parseFloat(computed.columnGap || '0') || 0) ||
-      0;
-
-    function outerW(el){
-      const r = el.getBoundingClientRect().width || 0;
-      return r > 0 ? r : (el.offsetWidth || 0);
-    }
-
     function clearClones(){
       Array.from(track.querySelectorAll('[data-tmco-clone="1"]')).forEach(n => n.remove());
     }
 
-    function segmentWidth(){
-      let w = 0;
-      originals.forEach((el, i) => {
-        w += outerW(el);
-        if (i < originals.length - 1) w += gap;
+    function appendCloneSet(){
+      const frag = document.createDocumentFragment();
+      originals.forEach(o => {
+        const c = o.cloneNode(true);
+        c.dataset.tmcoClone = '1';
+        c.style.flex = '0 0 auto';
+        c.style.flexShrink = '0';
+        frag.appendChild(c);
       });
-      // fallback se ainda não mediu (imagens)
+      track.appendChild(frag);
+    }
+
+    function segmentWidthFallback(){
+      let w = 0;
+      originals.forEach((el) => { w += el.getBoundingClientRect().width || 0; });
       return Math.max(1, w);
     }
 
-    function fillClones(){
+    // ✅ Clona e calcula segW do jeito mais confiável:
+    // diferença de offsetLeft entre o primeiro item original e o primeiro clone
+    function fillClonesAndMeasure(){
       clearClones();
 
+      // sempre garante pelo menos 1 set de clone (loop perfeito)
+      appendCloneSet();
+
+      const firstOrig = originals[0];
+      const firstClone = track.querySelector('[data-tmco-clone="1"]');
+
+      let segW = 0;
+      if (firstOrig && firstClone) {
+        segW = (firstClone.offsetLeft - firstOrig.offsetLeft);
+      }
+      if (!(segW > 1)) segW = segmentWidthFallback();
+
       const vw = wrapper.getBoundingClientRect().width || 1;
-      const segW = segmentWidth();
 
-      let totalW = segW;
+      // garante largura suficiente (sem “buraco” no início / durante drag)
       let safety = 0;
-
-      // garante pelo menos 3x viewport (sem “buraco”)
-      while (totalW < vw * 3 && safety < 80) {
-        const frag = document.createDocumentFragment();
-        originals.forEach(o => {
-          const c = o.cloneNode(true);
-          c.setAttribute('data-tmco-clone', '1');
-          c.style.flex = '0 0 auto';
-          c.style.flexShrink = '0';
-          frag.appendChild(c);
-        });
-        track.appendChild(frag);
-        totalW += segW;
+      while ((track.scrollWidth || 0) < vw * 3 && safety < 80) {
+        appendCloneSet();
         safety++;
       }
 
@@ -131,10 +131,11 @@
     }
 
     // ---- state ----
-    let segW = fillClones();
+    let segW = fillClonesAndMeasure();
 
-    // ✅ mantém a posição inicial “como está”
-    let x = 0;
+    // ✅ início em “phase”, não em 0 (evita começar na esquerda)
+    const phase = (dirSign > 0) ? START_PHASE_FIRST : START_PHASE_SECOND;
+    let x = -Math.max(0.12, Math.min(0.88, phase)) * segW;
 
     let lastTs = null;
 
@@ -145,9 +146,7 @@
     function render(){
       track.style.transform = `translate3d(${x}px,0,0)`;
     }
-
     function wrap(){
-      // mantem x dentro de (-segW, 0] (ou equivalente) sem quebrar o loop
       while (x > 0) x -= segW;
       while (x <= -segW) x += segW;
     }
@@ -199,17 +198,34 @@
     }, START_DELAY);
 
     // rebuild 1x preservando posição relativa (sem “pulo”)
-    setTimeout(() => {
+    function rebuildPreservingX(){
       const oldSegW = segW || 1;
       const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
 
-      segW = fillClones();
+      segW = fillClonesAndMeasure();
 
       x = -frac * segW;
       wrap();
       render();
       lastTs = null;
-    }, REBUILD_AT);
+    }
+
+    setTimeout(rebuildPreservingX, REBUILD_AT);
+
+    // ✅ extra: quando imagens carregarem, recalibra 1x (ajuda muito com lazy/gif)
+    // sem amarrar ao scroll vertical
+    let imgRebuildQueued = false;
+    const imgs = Array.from(wrapper.querySelectorAll('img'));
+    imgs.forEach(img => {
+      if (img.complete) return;
+      img.addEventListener('load', () => {
+        if (imgRebuildQueued) return;
+        imgRebuildQueued = true;
+        setTimeout(() => {
+          rebuildPreservingX();
+        }, 80);
+      }, { once: true });
+    });
 
     // ---- drag ----
     wrapper.addEventListener('pointerdown', (e) => {
@@ -237,42 +253,13 @@
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
 
-    // resize (recalcula clones mantendo posição)
+    // resize
     let to = null;
     window.addEventListener('resize', () => {
       clearTimeout(to);
       to = setTimeout(() => {
-        const oldSegW = segW || 1;
-        const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
-
-        segW = fillClones();
-        x = -frac * segW;
-
-        wrap();
-        render();
-        lastTs = null;
+        rebuildPreservingX();
       }, 150);
-    });
-
-    // imagens carregando depois podem alterar largura: recalibra 1x (sem mexer no comportamento)
-    let imgTo = null;
-    const imgs = Array.from(track.querySelectorAll('img'));
-    imgs.forEach(img => {
-      if (img.complete) return;
-      img.addEventListener('load', () => {
-        clearTimeout(imgTo);
-        imgTo = setTimeout(() => {
-          const oldSegW = segW || 1;
-          const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
-
-          segW = fillClones();
-          x = -frac * segW;
-
-          wrap();
-          render();
-          lastTs = null;
-        }, 80);
-      }, { once: true });
     });
   }
 })();
