@@ -2,15 +2,11 @@
   if (window.__tmcoMarqueeMultiV1) return;
   window.__tmcoMarqueeMultiV1 = true;
 
-  const SPEED = 45;          // px/s
-  const START_DELAY = 600;   // ms
-  const REBUILD_AT  = 900;   // ms: recalibra 1x após “assentar”
-  const DT_MAX = (1/60) * 2; // clamp ~33ms
-
-  // ✅ início “no meio do loop” (evita começar colado na esquerda)
-  // use valores entre 0.12 e 0.88
-  const START_PHASE_FIRST  = 0.33; // 1ª linha
-  const START_PHASE_SECOND = 0.62; // 2ª linha
+  const SPEED = 45;           // px/s
+  const START_DELAY = 600;    // ms
+  const REBUILD_AT  = 900;    // ms
+  const DT_MAX = (1/60) * 2;  // clamp ~33ms
+  const IMG_WAIT_MS = 3500;   // espera máx imgs (lazy/gif)
 
   window.addEventListener('load', () => {
     boot();
@@ -47,8 +43,8 @@
     const second = section.querySelector(cfg.secondWrapperSel) || wrappers[1] || null;
     const first  = wrappers.find(w => w !== second) || wrappers[0] || null;
 
-    if (first)  initLine(first,  +1, cfg); // esquerda -> direita
-    if (second) initLine(second, -1, cfg); // direita -> esquerda
+    if (first)  initLine(first,  +1, cfg); // 1ª linha: pra direita
+    if (second) initLine(second, -1, cfg); // 2ª linha: pra esquerda
   }
 
   function initLine(wrapper, dirSign, cfg){
@@ -60,17 +56,16 @@
     if (track.dataset[key] === '1') return;
     track.dataset[key] = '1';
 
-    // garante estilos essenciais
+    // estilos essenciais (não depender do Webflow)
     track.style.transition = 'none';
     track.style.backfaceVisibility = 'hidden';
-    track.style.transform = 'translate3d(0,0,0)';
     track.style.willChange = 'transform';
     track.style.display = 'flex';
     track.style.flexWrap = 'nowrap';
-    track.style.justifyContent = 'flex-start'; // evita space-between/center “abrindo buracos”
+    track.style.justifyContent = 'flex-start';
 
-    // itens originais = filhos que batem com itemSel (ou todos os filhos se não achar)
-    let originals = Array.from(track.children).filter(el => el.matches(cfg.itemSel));
+    // pega só os "originais" (sem clones)
+    let originals = Array.from(track.children).filter(el => el.matches?.(cfg.itemSel));
     if (!originals.length) originals = Array.from(track.children);
     if (!originals.length) return;
 
@@ -79,11 +74,17 @@
       it.style.flexShrink = '0';
     });
 
+    function measureAnchor(refEl){
+      const w = wrapper.getBoundingClientRect();
+      const r = refEl.getBoundingClientRect();
+      return r.left - w.left;
+    }
+
     function clearClones(){
       Array.from(track.querySelectorAll('[data-tmco-clone="1"]')).forEach(n => n.remove());
     }
 
-    function appendCloneSet(){
+    function makeCloneFrag(){
       const frag = document.createDocumentFragment();
       originals.forEach(o => {
         const c = o.cloneNode(true);
@@ -92,51 +93,86 @@
         c.style.flexShrink = '0';
         frag.appendChild(c);
       });
-      track.appendChild(frag);
+      return frag;
     }
 
-    function segmentWidthFallback(){
-      let w = 0;
-      originals.forEach((el) => { w += el.getBoundingClientRect().width || 0; });
-      return Math.max(1, w);
+    function appendCloneSet(){
+      track.appendChild(makeCloneFrag());
     }
 
-    // ✅ Clona e calcula segW do jeito mais confiável:
-    // diferença de offsetLeft entre o primeiro item original e o primeiro clone
-    function fillClonesAndMeasure(){
-      clearClones();
+    function prependCloneSet(){
+      track.insertBefore(makeCloneFrag(), track.firstChild);
+    }
 
-      // sempre garante pelo menos 1 set de clone (loop perfeito)
-      appendCloneSet();
-
+    // segW = distância entre o 1º original e o 1º clone (inclui gaps/margens reais)
+    function measureSegW(){
       const firstOrig = originals[0];
       const firstClone = track.querySelector('[data-tmco-clone="1"]');
+      if (!firstOrig || !firstClone) return 1;
+      const w = (firstClone.offsetLeft - firstOrig.offsetLeft);
+      return (w > 1) ? w : 1;
+    }
 
-      let segW = 0;
-      if (firstOrig && firstClone) {
-        segW = (firstClone.offsetLeft - firstOrig.offsetLeft);
-      }
-      if (!(segW > 1)) segW = segmentWidthFallback();
-
+    function fillClones(segW){
       const vw = wrapper.getBoundingClientRect().width || 1;
-
-      // garante largura suficiente (sem “buraco” no início / durante drag)
       let safety = 0;
+
+      // garante largura suficiente (sem buracos durante o loop/drag)
       while ((track.scrollWidth || 0) < vw * 3 && safety < 80) {
         appendCloneSet();
         safety++;
       }
 
-      return segW;
+      // se a linha for pra direita, precisa ter conteúdo antes do "0"
+      // (pra não abrir vazio no lado esquerdo quando x aumenta)
+      if (dirSign > 0) {
+        // 1 segmento à esquerda normalmente basta (x fica perto de -segW)
+        prependCloneSet();
+      }
+
+      // depois de prepend, pode precisar completar largura de novo
+      safety = 0;
+      while ((track.scrollWidth || 0) < vw * 3 && safety < 80) {
+        appendCloneSet();
+        safety++;
+      }
     }
 
-    // ---- state ----
-    let segW = fillClonesAndMeasure();
+    function waitImages(){
+      const imgs = [];
+      originals.forEach(el => imgs.push(...el.querySelectorAll('img')));
+      const pending = imgs.filter(img => !img.complete);
 
-    // ✅ início em “phase”, não em 0 (evita começar na esquerda)
-    const phase = (dirSign > 0) ? START_PHASE_FIRST : START_PHASE_SECOND;
-    let x = -Math.max(0.12, Math.min(0.88, phase)) * segW;
+      if (!pending.length) return Promise.resolve();
 
+      return new Promise(resolve => {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          resolve();
+        };
+        const t = setTimeout(finish, IMG_WAIT_MS);
+
+        pending.forEach(img => {
+          const on = () => {
+            img.removeEventListener('load', on);
+            img.removeEventListener('error', on);
+            const still = pending.filter(i => !i.complete);
+            if (!still.length) {
+              clearTimeout(t);
+              finish();
+            }
+          };
+          img.addEventListener('load', on);
+          img.addEventListener('error', on);
+        });
+      });
+    }
+
+    // ---- animação state ----
+    let segW = 1;
+    let x = 0;
     let lastTs = null;
 
     let dragging = false;
@@ -146,120 +182,159 @@
     function render(){
       track.style.transform = `translate3d(${x}px,0,0)`;
     }
+
     function wrap(){
+      // mantém em uma faixa estável e evita “colar” no 0 à força
       while (x > 0) x -= segW;
-      while (x <= -segW) x += segW;
+      while (x < -segW) x += segW;
     }
 
-    wrap();
-    render();
+    function rebuildPreservingAnchor(refEl){
+      // âncora atual (com transform vigente)
+      const anchorDesired = measureAnchor(refEl);
 
-    let started = false;
-    let warmUntil = 0;
+      // evita flicker durante rebuild
+      const prevVis = track.style.visibility;
+      track.style.visibility = 'hidden';
 
-    function tick(ts){
-      if (!started) return;
+      clearClones();
 
-      if (lastTs === null) {
+      // sempre cria 1 set de clones pra medir segW
+      appendCloneSet();
+      segW = measureSegW();
+
+      fillClones(segW);
+
+      // com DOM novo, mede onde o ref está (sem ajuste)
+      const anchorNow = measureAnchor(refEl);
+
+      // ajuste de x para manter “exatamente onde estava”
+      x = x + (anchorDesired - anchorNow);
+
+      // normaliza sem mudar o visual (segmento repete)
+      wrap();
+      render();
+
+      track.style.visibility = prevVis || 'visible';
+      lastTs = null;
+    }
+
+    function startTicker(){
+      let started = false;
+      let warmUntil = 0;
+
+      function tick(ts){
+        if (!started) return;
+
+        if (lastTs === null) {
+          lastTs = ts;
+          requestAnimationFrame(tick);
+          return;
+        }
+
+        if (ts < warmUntil) {
+          lastTs = ts;
+          requestAnimationFrame(tick);
+          return;
+        }
+
+        let dt = (ts - lastTs) / 1000;
+        if (dt < 0) dt = 0;
+        if (dt > DT_MAX) dt = DT_MAX;
         lastTs = ts;
+
+        if (!dragging) {
+          x += (dirSign * SPEED) * dt;
+          wrap();
+          render();
+        }
+
         requestAnimationFrame(tick);
-        return;
       }
 
-      if (ts < warmUntil) {
-        lastTs = ts;
-        requestAnimationFrame(tick);
-        return;
-      }
+      setTimeout(() => {
+        requestAnimationFrame((t0) => {
+          warmUntil = t0 + 120;
+          lastTs = null;
+          started = true;
+          render();
+          requestAnimationFrame(tick);
+        });
+      }, START_DELAY);
+    }
 
-      let dt = (ts - lastTs) / 1000;
-      if (dt < 0) dt = 0;
-      if (dt > DT_MAX) dt = DT_MAX;
-      lastTs = ts;
+    // ====== INIT: espera imagens e começa SEM mudar o visual ======
+    (async () => {
+      await waitImages();
 
-      if (!dragging) {
-        x += (dirSign * SPEED) * dt;
+      // espera layout assentar 2 frames
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const refEl = originals[0];
+      if (!refEl) return;
+
+      // garante que antes de qualquer clone, a posição “original” está intacta:
+      // (não aplicamos transform aqui ainda)
+      const anchorOriginal = measureAnchor(refEl);
+
+      // monta loop e ajusta para manter a mesma âncora
+      const prevVis = track.style.visibility;
+      track.style.visibility = 'hidden';
+
+      clearClones();
+      appendCloneSet();
+      segW = measureSegW();
+      fillClones(segW);
+
+      const anchorAfter = measureAnchor(refEl);
+
+      // ✅ define x para deixar o card exatamente onde estava
+      x = (anchorOriginal - anchorAfter);
+
+      // não força x=0; só normaliza de forma segura
+      wrap();
+      render();
+
+      track.style.visibility = prevVis || 'visible';
+
+      // rebuild 1x (sem “pulo”, preserva âncora)
+      setTimeout(() => rebuildPreservingAnchor(refEl), REBUILD_AT);
+
+      // resize preservando âncora
+      let to = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(to);
+        to = setTimeout(() => rebuildPreservingAnchor(refEl), 150);
+      });
+
+      // drag
+      wrapper.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        dragging = true;
+        wrapper.setPointerCapture?.(e.pointerId);
+        downX = e.clientX;
+        startX = x;
+        lastTs = null;
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - downX;
+        x = startX + dx;
         wrap();
         render();
-      }
-
-      requestAnimationFrame(tick);
-    }
-
-    // start suave
-    setTimeout(() => {
-      requestAnimationFrame((t0) => {
-        warmUntil = t0 + 120;
-        lastTs = null;
-        started = true;
-        render();
-        requestAnimationFrame(tick);
       });
-    }, START_DELAY);
 
-    // rebuild 1x preservando posição relativa (sem “pulo”)
-    function rebuildPreservingX(){
-      const oldSegW = segW || 1;
-      const frac = ((-x % oldSegW) + oldSegW) / oldSegW;
+      function end(){
+        if (!dragging) return;
+        dragging = false;
+        lastTs = null;
+      }
+      window.addEventListener('pointerup', end);
+      window.addEventListener('pointercancel', end);
 
-      segW = fillClonesAndMeasure();
-
-      x = -frac * segW;
-      wrap();
-      render();
-      lastTs = null;
-    }
-
-    setTimeout(rebuildPreservingX, REBUILD_AT);
-
-    // ✅ extra: quando imagens carregarem, recalibra 1x (ajuda muito com lazy/gif)
-    // sem amarrar ao scroll vertical
-    let imgRebuildQueued = false;
-    const imgs = Array.from(wrapper.querySelectorAll('img'));
-    imgs.forEach(img => {
-      if (img.complete) return;
-      img.addEventListener('load', () => {
-        if (imgRebuildQueued) return;
-        imgRebuildQueued = true;
-        setTimeout(() => {
-          rebuildPreservingX();
-        }, 80);
-      }, { once: true });
-    });
-
-    // ---- drag ----
-    wrapper.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      dragging = true;
-      wrapper.setPointerCapture?.(e.pointerId);
-      downX = e.clientX;
-      startX = x;
-      lastTs = null;
-    });
-
-    window.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      const dx = e.clientX - downX;
-      x = startX + dx;
-      wrap();
-      render();
-    });
-
-    function end(){
-      if (!dragging) return;
-      dragging = false;
-      lastTs = null;
-    }
-    window.addEventListener('pointerup', end);
-    window.addEventListener('pointercancel', end);
-
-    // resize
-    let to = null;
-    window.addEventListener('resize', () => {
-      clearTimeout(to);
-      to = setTimeout(() => {
-        rebuildPreservingX();
-      }, 150);
-    });
+      // autoplay
+      startTicker();
+    })();
   }
 })();
