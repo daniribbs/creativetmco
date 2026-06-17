@@ -1,5 +1,5 @@
 (function(){
-  var SELECTOR = 'input[name="telefone"], #telefone';
+  var SELECTOR = 'input[name="telefone"]:not([type="hidden"]), #telefone:not([type="hidden"])';
 
   function ready(fn){
     if (document.readyState !== 'loading') {
@@ -11,16 +11,6 @@
 
   function onlyDigits(s){
     return String(s || '').replace(/\D/g, '');
-  }
-
-  function closestForm(el){
-    while (el && el !== document) {
-      if (el.tagName && el.tagName.toLowerCase() === 'form') {
-        return el;
-      }
-      el = el.parentNode;
-    }
-    return null;
   }
 
   function maskLocalByDDI(cc, digits){
@@ -62,49 +52,16 @@
     return digits ? '+' + digits : '';
   }
 
-  var callingCodePromise = null;
-
-  function getCallingCode(){
-    if (callingCodePromise) return callingCodePromise;
-
-    if (!window.fetch) {
-      callingCodePromise = Promise.resolve('55');
-      return callingCodePromise;
-    }
-
-    callingCodePromise = fetch('https://ipwho.is/?fields=calling_code')
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if (d && d.calling_code) return d.calling_code;
-        throw new Error('sem calling_code');
-      })
-      .catch(function(){
-        return fetch('https://ipapi.co/json/')
-          .then(function(r){ return r.json(); })
-          .then(function(d){
-            if (d && d.country_calling_code) return d.country_calling_code;
-            return '55';
-          })
-          .catch(function(){
-            return '55';
-          });
-      });
-
-    return callingCodePromise;
-  }
-
-  function enhanceField(tel, index){
+  function enhanceField(tel){
     if (!tel) return;
+    if (tel.type === 'hidden') return;
     if (tel.getAttribute('data-ctm-phone-enhanced') === '1') return;
+    if (tel.getAttribute('data-ctm-phone-hidden') === '1') return;
 
     tel.setAttribute('data-ctm-phone-enhanced', '1');
 
-    var form = tel.closest ? tel.closest('form') : closestForm(tel);
+    var form = tel.closest ? tel.closest('form') : null;
     var originalName = tel.getAttribute('name') || 'telefone';
-
-    if (originalName.indexOf('_local') > -1) {
-      originalName = originalName.replace('_local', '');
-    }
 
     var wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
@@ -114,7 +71,9 @@
 
     var cc = document.createElement('input');
     cc.type = 'text';
+    cc.name = originalName + '_ddi';
     cc.placeholder = '+55';
+    cc.value = '+55';
     cc.inputMode = 'numeric';
     cc.autocomplete = 'tel-country-code';
     cc.maxLength = 4;
@@ -123,12 +82,6 @@
     cc.style.width = '72px';
     cc.style.flex = '0 0 72px';
     cc.setAttribute('aria-label', 'Código do país');
-
-    /**
-     * Não uso id aqui para não criar 3 elementos com o mesmo ID.
-     * O name abaixo é opcional. Pode remover se não quiser enviar o DDI separado.
-     */
-    cc.name = originalName + '_ddi';
 
     var parent = tel.parentNode;
     parent.insertBefore(wrapper, tel);
@@ -143,7 +96,7 @@
     tel.type = 'text';
     tel.inputMode = 'tel';
     tel.autocomplete = 'tel';
-    tel.placeholder = tel.placeholder || 'Seu número';
+    tel.placeholder = tel.placeholder || '(11) 98765-4321';
 
     var hidden = null;
 
@@ -217,45 +170,22 @@
       }, true);
     }
 
-    cc.value = '+55';
-    tel.placeholder = '(11) 98765-4321';
-
-    getCallingCode().then(function(code){
-      if (!cc.value || cc.value === '+55') {
-        cc.value = normalizeCC(code) || '+55';
-
-        var ddi = getCountryCode(cc);
-
-        if (!tel.value) {
-          tel.placeholder = ddi === '55'
-            ? '(11) 98765-4321'
-            : ddi === '1'
-              ? '(415) 555-1234'
-              : 'Seu número';
-        }
-
-        remaskLocal();
-        syncHidden();
-      }
-    });
+    remaskLocal();
+    syncHidden();
   }
 
   function enhanceAll(){
     var fields = document.querySelectorAll(SELECTOR);
 
     for (var i = 0; i < fields.length; i++) {
-      enhanceField(fields[i], i + 1);
+      enhanceField(fields[i]);
     }
   }
 
   ready(function(){
     enhanceAll();
 
-    /**
-     * Rodadas extras leves para casos em que o Webflow demora
-     * um pouco para renderizar algum formulário.
-     * Sem observer global para não travar a página.
-     */
+    // rodadas leves para casos em que o Webflow renderiza algum form depois
     setTimeout(enhanceAll, 500);
     setTimeout(enhanceAll, 1500);
   });
