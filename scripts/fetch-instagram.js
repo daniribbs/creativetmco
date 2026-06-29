@@ -4,6 +4,8 @@ const path = require("path");
 const rawToken = process.env.INSTAGRAM_TOKEN || "";
 const instagramUserId = process.env.INSTAGRAM_USER_ID || "";
 
+const targetHashtag = "#CreativeTMCO";
+
 const token = rawToken
   .trim()
   .replace(/^Bearer\s+/i, "")
@@ -15,6 +17,7 @@ if (!token) {
 }
 
 console.log(`Token carregado com ${token.length} caracteres.`);
+console.log(`Filtrando posts com a hashtag ${targetHashtag}.`);
 console.log(instagramUserId ? "Usando Instagram Graph API com INSTAGRAM_USER_ID." : "Usando Instagram Basic Display API com /me/media.");
 
 const fields = [
@@ -33,7 +36,7 @@ function buildApiUrl() {
 
     url.searchParams.set("fields", fields);
     url.searchParams.set("access_token", token);
-    url.searchParams.set("limit", "12");
+    url.searchParams.set("limit", "50");
 
     return url.toString();
   }
@@ -42,9 +45,17 @@ function buildApiUrl() {
 
   url.searchParams.set("fields", fields);
   url.searchParams.set("access_token", token);
-  url.searchParams.set("limit", "12");
+  url.searchParams.set("limit", "50");
 
   return url.toString();
+}
+
+function hasTargetHashtag(caption) {
+  const hashtags = String(caption || "").match(/#[\p{L}\p{N}_]+/gu) || [];
+
+  return hashtags.some((hashtag) => {
+    return hashtag.toLowerCase() === targetHashtag.toLowerCase();
+  });
 }
 
 async function main() {
@@ -60,6 +71,12 @@ async function main() {
   const data = await response.json();
 
   const posts = (data.data || [])
+    .filter((post) => {
+      return hasTargetHashtag(post.caption);
+    })
+    .sort((a, b) => {
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    })
     .filter((post) => {
       return (
         post.media_type === "IMAGE" ||
