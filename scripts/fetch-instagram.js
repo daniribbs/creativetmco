@@ -1,12 +1,21 @@
 const fs = require("fs");
 const path = require("path");
 
-const token = process.env.INSTAGRAM_TOKEN;
+const rawToken = process.env.INSTAGRAM_TOKEN || "";
 const instagramUserId = process.env.INSTAGRAM_USER_ID || "";
+
+const token = rawToken
+  .trim()
+  .replace(/^Bearer\s+/i, "")
+  .replace(/^access_token=/i, "")
+  .replace(/^["']|["']$/g, "");
 
 if (!token) {
   throw new Error("INSTAGRAM_TOKEN não configurado nos Secrets do GitHub.");
 }
+
+console.log(`Token carregado com ${token.length} caracteres.`);
+console.log(instagramUserId ? "Usando Instagram Graph API com INSTAGRAM_USER_ID." : "Usando Instagram Basic Display API com /me/media.");
 
 const fields = [
   "id",
@@ -18,19 +27,29 @@ const fields = [
   "timestamp"
 ].join(",");
 
-/*
-  Se você configurou INSTAGRAM_USER_ID, usa Instagram Graph API:
-  https://graph.facebook.com/{id}/media
+function buildApiUrl() {
+  if (instagramUserId) {
+    const url = new URL(`https://graph.facebook.com/v20.0/${instagramUserId}/media`);
 
-  Se não configurou, tenta Basic Display:
-  https://graph.instagram.com/me/media
-*/
+    url.searchParams.set("fields", fields);
+    url.searchParams.set("access_token", token);
+    url.searchParams.set("limit", "12");
 
-const apiUrl = instagramUserId
-  ? `https://graph.facebook.com/v20.0/${instagramUserId}/media?fields=${fields}&access_token=${token}&limit=12`
-  : `https://graph.instagram.com/me/media?fields=${fields}&access_token=${token}&limit=12`;
+    return url.toString();
+  }
+
+  const url = new URL("https://graph.instagram.com/me/media");
+
+  url.searchParams.set("fields", fields);
+  url.searchParams.set("access_token", token);
+  url.searchParams.set("limit", "12");
+
+  return url.toString();
+}
 
 async function main() {
+  const apiUrl = buildApiUrl();
+
   const response = await fetch(apiUrl);
 
   if (!response.ok) {
