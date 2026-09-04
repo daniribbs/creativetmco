@@ -584,8 +584,8 @@
       'Código do país'
     );
 
-    cc.style.width = '72px';
-    cc.style.flex = '0 0 72px';
+    cc.style.width = '76px';
+    cc.style.flex = '0 0 76px';
 
     /**
      * Campo hidden que será realmente enviado.
