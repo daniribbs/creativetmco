@@ -480,8 +480,8 @@
       'Código do país'
     );
 
-    cc.style.width = '72px';
-    cc.style.flex = '0 0 76px';
+    cc.style.width = '78px';
+    cc.style.flex = '0 0 78px';
 
     /**
      * Campo hidden que será enviado para o formulário.
