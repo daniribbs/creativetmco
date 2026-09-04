@@ -481,7 +481,7 @@
     );
 
     cc.style.width = '72px';
-    cc.style.flex = '0 0 72px';
+    cc.style.flex = '0 0 76px';
 
     /**
      * Campo hidden que será enviado para o formulário.
