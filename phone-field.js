@@ -2,7 +2,7 @@
   var PHONE_SELECTOR =
     'input[name="telefone"]:not([type="hidden"]), input#telefone:not([type="hidden"])';
 
-  var DDI_CACHE_KEY = 'ctm_detected_ddi_v1';
+  var DDI_CACHE_KEY = 'ctm_detected_ddi_v3';
   var ddiDetectionPromise = null;
 
   function ready(fn) {
@@ -18,10 +18,10 @@
   }
 
   /**
-   * DDI padrão antes da geolocalização por IP.
+   * DDI padrão pela URL:
    *
    * /lps/sites-pt... = Portugal
-   * restante = Brasil
+   * qualquer outra URL = Brasil
    */
   function getDefaultDDI() {
     var path = String(window.location.pathname || '').toLowerCase();
@@ -34,22 +34,43 @@
   }
 
   /**
-   * Detecta o DDI pelo IP.
-   *
-   * A consulta é feita apenas uma vez por página.
-   * O resultado também é salvo no sessionStorage.
-   *
-   * Se falhar, retorna null e o formulário
-   * continua usando o DDI padrão.
+   * Busca DDI salvo anteriormente.
    */
-  function detectDDIByIP() {
+  function getCachedDDI() {
     try {
-      var cached = sessionStorage.getItem(DDI_CACHE_KEY);
+      var cached = localStorage.getItem(DDI_CACHE_KEY);
 
       if (cached && /^\+\d{1,3}$/.test(cached)) {
-        return Promise.resolve(cached);
+        return cached;
       }
     } catch (e) {}
+
+    return null;
+  }
+
+  /**
+   * Salva DDI para próximas páginas/visitas.
+   */
+  function saveCachedDDI(ddi) {
+    try {
+      localStorage.setItem(DDI_CACHE_KEY, ddi);
+    } catch (e) {}
+  }
+
+  /**
+   * Detecta o DDI pelo IP.
+   *
+   * IMPORTANTE:
+   * esta função NÃO roda durante o carregamento.
+   * Só será chamada quando o usuário interagir
+   * com o telefone.
+   */
+  function detectDDIByIP() {
+    var cached = getCachedDDI();
+
+    if (cached) {
+      return Promise.resolve(cached);
+    }
 
     if (ddiDetectionPromise) {
       return ddiDetectionPromise;
@@ -67,6 +88,11 @@
 
       var finished = false;
 
+      /**
+       * Timeout curto.
+       * Se a API demorar, simplesmente mantém
+       * +55 ou +351.
+       */
       var timeout = setTimeout(function () {
         if (finished) return;
 
@@ -79,7 +105,7 @@
         }
 
         resolve(null);
-      }, 3500);
+      }, 1800);
 
       fetch('https://ipapi.co/country_calling_code/', {
         method: 'GET',
@@ -105,9 +131,7 @@
             return;
           }
 
-          try {
-            sessionStorage.setItem(DDI_CACHE_KEY, ddi);
-          } catch (e) {}
+          saveCachedDDI(ddi);
 
           resolve(ddi);
         })
@@ -124,6 +148,9 @@
     return ddiDetectionPromise;
   }
 
+  /**
+   * Máscaras.
+   */
   function maskLocalByDDI(cc, digits) {
     /**
      * Brasil
@@ -131,7 +158,9 @@
     if (cc === '55') {
       var d = digits.slice(0, 11);
 
-      if (d.length <= 2) return d;
+      if (d.length <= 2) {
+        return d;
+      }
 
       if (d.length <= 6) {
         return '(' + d.slice(0, 2) + ') ' + d.slice(2);
@@ -159,12 +188,14 @@
     }
 
     /**
-     * Estados Unidos / Canadá
+     * EUA / Canadá
      */
     if (cc === '1') {
       var u = digits.slice(0, 10);
 
-      if (u.length <= 3) return u;
+      if (u.length <= 3) {
+        return u;
+      }
 
       if (u.length <= 6) {
         return '(' + u.slice(0, 3) + ') ' + u.slice(3);
@@ -186,7 +217,9 @@
     if (cc === '351') {
       var p = digits.slice(0, 9);
 
-      if (p.length <= 3) return p;
+      if (p.length <= 3) {
+        return p;
+      }
 
       if (p.length <= 6) {
         return p.slice(0, 3) + ' ' + p.slice(3);
@@ -202,11 +235,16 @@
     }
 
     /**
-     * Outros países
+     * Demais países.
+     *
+     * Máscara genérica para não impedir
+     * números internacionais válidos.
      */
-    var x = digits.slice(0, 12);
+    var x = digits.slice(0, 15);
 
-    if (x.length <= 3) return x;
+    if (x.length <= 3) {
+      return x;
+    }
 
     if (x.length <= 6) {
       return x.slice(0, 3) + ' ' + x.slice(3);
@@ -227,7 +265,7 @@
       ' ' +
       x.slice(4, 7) +
       '-' +
-      x.slice(7, 12)
+      x.slice(7)
     );
   }
 
@@ -254,10 +292,9 @@
   }
 
   /**
-   * Tenta separar DDI e telefone quando o usuário
-   * cola um número internacional completo.
+   * Trata números internacionais colados.
    *
-   * Exemplo:
+   * Ex.:
    * +5511987654321
    * +351912345678
    * +12125551234
@@ -276,8 +313,7 @@
     }
 
     /**
-     * Primeiro tenta o DDI que já está selecionado.
-     * Isso evita interpretar +5511... como +551.
+     * Primeiro testa o DDI atual.
      */
     var current = onlyDigits(currentDDI);
 
@@ -295,7 +331,10 @@
     /**
      * DDIs de 1 dígito.
      */
-    if (digits.charAt(0) === '1' || digits.charAt(0) === '7') {
+    if (
+      digits.charAt(0) === '1' ||
+      digits.charAt(0) === '7'
+    ) {
       return {
         ddi: digits.charAt(0),
         phone: digits.slice(1)
@@ -303,16 +342,53 @@
     }
 
     /**
-     * Principais DDIs de 2 dígitos.
+     * DDIs conhecidos de 2 dígitos.
      */
     var twoDigitDDIs = [
-      '20', '27',
-      '30', '31', '32', '33', '34', '36', '39',
-      '40', '41', '43', '44', '45', '46', '47', '48', '49',
-      '51', '52', '53', '54', '55', '56', '57', '58',
-      '60', '61', '62', '63', '64', '65', '66',
-      '81', '82', '84', '86',
-      '90', '91', '92', '93', '94', '95', '98'
+      '20',
+      '27',
+      '30',
+      '31',
+      '32',
+      '33',
+      '34',
+      '36',
+      '39',
+      '40',
+      '41',
+      '43',
+      '44',
+      '45',
+      '46',
+      '47',
+      '48',
+      '49',
+      '51',
+      '52',
+      '53',
+      '54',
+      '55',
+      '56',
+      '57',
+      '58',
+      '60',
+      '61',
+      '62',
+      '63',
+      '64',
+      '65',
+      '66',
+      '81',
+      '82',
+      '84',
+      '86',
+      '90',
+      '91',
+      '92',
+      '93',
+      '94',
+      '95',
+      '98'
     ];
 
     var firstTwo = digits.slice(0, 2);
@@ -325,7 +401,7 @@
     }
 
     /**
-     * Demais DDIs: tenta 3 dígitos.
+     * Caso contrário tenta DDI de 3 dígitos.
      */
     if (digits.length > 3) {
       return {
@@ -337,10 +413,10 @@
     return null;
   }
 
+  /**
+   * Limpa versões antigas do script.
+   */
   function cleanupPreviousVersions() {
-    /**
-     * Remove campos DDI criados por versões anteriores.
-     */
     var generatedDDIs = document.querySelectorAll(
       'input[name="country_code"], ' +
       'input[name="telefone_ddi"], ' +
@@ -366,7 +442,11 @@
           wrapper.style.display === 'flex'
         )
       ) {
-        wrapper.parentNode.insertBefore(possibleTel, wrapper);
+        wrapper.parentNode.insertBefore(
+          possibleTel,
+          wrapper
+        );
+
         wrapper.parentNode.removeChild(wrapper);
       } else if (ddi.parentNode) {
         ddi.parentNode.removeChild(ddi);
@@ -374,11 +454,10 @@
     }
 
     /**
-     * Remove hidden criado por versões anteriores.
+     * Remove somente hidden criado pelo nosso script.
      */
     var generatedHiddens = document.querySelectorAll(
-      'input[data-ctm-phone-hidden="1"], ' +
-      'form input[type="hidden"][name="telefone"]'
+      'input[data-ctm-phone-hidden="1"]'
     );
 
     for (var h = 0; h < generatedHiddens.length; h++) {
@@ -390,22 +469,27 @@
     }
 
     /**
-     * Restaura o campo visível para name="telefone".
+     * Restaura telefone_local.
      */
     var localFields = document.querySelectorAll(
       'input[name="telefone_local"]'
     );
 
     for (var l = 0; l < localFields.length; l++) {
-      localFields[l].setAttribute('name', 'telefone');
+      localFields[l].setAttribute(
+        'name',
+        'telefone'
+      );
+
       localFields[l].removeAttribute(
         'data-ctm-phone-enhanced'
       );
+
       localFields[l].style.flex = '';
     }
 
     /**
-     * Remove wrappers vazios que possam ter sobrado.
+     * Remove wrappers vazios.
      */
     var wrappers = document.querySelectorAll(
       '.ctm-phone-wrap'
@@ -422,7 +506,10 @@
 
   function enhancePhoneField(tel) {
     if (!tel) return;
-    if (tel.type === 'hidden') return;
+
+    if (tel.type === 'hidden') {
+      return;
+    }
 
     if (
       tel.getAttribute('data-ctm-phone-enhanced') === '1'
@@ -434,7 +521,9 @@
       ? tel.closest('form')
       : null;
 
-    if (!form) return;
+    if (!form) {
+      return;
+    }
 
     tel.setAttribute(
       'data-ctm-phone-enhanced',
@@ -444,30 +533,45 @@
     var originalName = 'telefone';
 
     /**
-     * Wrapper
+     * Define DDI inicial.
+     *
+     * Prioridade:
+     * 1. cache de IP já existente
+     * 2. padrão da URL
+     */
+    var cachedDDI = getCachedDDI();
+
+    var initialDDI =
+      cachedDDI ||
+      getDefaultDDI();
+
+    /**
+     * Wrapper.
      */
     var wrapper = document.createElement('div');
 
     wrapper.className = 'ctm-phone-wrap';
+
     wrapper.style.display = 'flex';
     wrapper.style.gap = '6px';
     wrapper.style.alignItems = 'center';
     wrapper.style.width = '100%';
 
     /**
-     * Campo DDI
+     * DDI.
      */
     var cc = document.createElement('input');
 
-    var defaultDDI = getDefaultDDI();
-
     cc.type = 'text';
     cc.name = 'telefone_ddi';
-    cc.value = defaultDDI;
-    cc.placeholder = defaultDDI;
+
+    cc.value = initialDDI;
+    cc.placeholder = initialDDI;
+
     cc.inputMode = 'numeric';
     cc.autocomplete = 'tel-country-code';
     cc.maxLength = 4;
+
     cc.className = 'field-form w-input';
 
     cc.setAttribute(
@@ -480,13 +584,13 @@
       'Código do país'
     );
 
-    cc.style.width = '78px';
-    cc.style.flex = '0 0 78px';
+    cc.style.width = '72px';
+    cc.style.flex = '0 0 72px';
 
     /**
-     * Campo hidden que será enviado para o formulário.
+     * Campo hidden que será realmente enviado.
      *
-     * Exemplo:
+     * Ex.:
      * +5511987654321
      */
     var hidden = document.createElement('input');
@@ -505,7 +609,7 @@
     );
 
     /**
-     * Campo visível do telefone.
+     * Campo visível.
      */
     tel.setAttribute(
       'name',
@@ -521,10 +625,13 @@
 
     tel.style.flex = '1';
 
+    /**
+     * Placeholder inicial.
+     */
     if (!tel.placeholder) {
-      if (defaultDDI === '+351') {
+      if (initialDDI === '+351') {
         tel.placeholder = '912 345 678';
-      } else {
+      } else if (initialDDI === '+55') {
         tel.placeholder = '(11) 98765-4321';
       }
     }
@@ -540,10 +647,28 @@
     wrapper.appendChild(tel);
 
     /**
-     * Usado para impedir que a geolocalização
-     * sobrescreva uma escolha manual do usuário.
+     * Controle de interação.
      */
     var ddiManuallyChanged = false;
+    var geoDetectionStarted = false;
+
+    function updatePlaceholder() {
+      if (tel.value) {
+        return;
+      }
+
+      var ddi = cc.value;
+
+      if (ddi === '+55') {
+        tel.placeholder = '(11) 98765-4321';
+      } else if (ddi === '+351') {
+        tel.placeholder = '912 345 678';
+      } else if (ddi === '+1') {
+        tel.placeholder = '(212) 555-1234';
+      } else {
+        tel.placeholder = 'Telefone';
+      }
+    }
 
     function remask() {
       var code = getCC(cc);
@@ -567,7 +692,48 @@
     }
 
     /**
-     * Usuário alterando DDI manualmente.
+     * Geolocalização iniciada SOMENTE
+     * quando o usuário interagir com o campo.
+     */
+    function startGeoDetection() {
+      if (geoDetectionStarted) {
+        return;
+      }
+
+      geoDetectionStarted = true;
+
+      /**
+       * Já existe DDI em cache.
+       * Não precisa fazer chamada externa.
+       */
+      if (cachedDDI) {
+        return;
+      }
+
+      detectDDIByIP().then(function (detectedDDI) {
+        if (!detectedDDI) {
+          return;
+        }
+
+        /**
+         * Se usuário alterou o DDI manualmente,
+         * não sobrescreve.
+         */
+        if (ddiManuallyChanged) {
+          return;
+        }
+
+        cc.value = detectedDDI;
+        cc.placeholder = detectedDDI;
+
+        updatePlaceholder();
+        remask();
+        syncHidden();
+      });
+    }
+
+    /**
+     * Usuário edita DDI.
      */
     cc.addEventListener(
       'input',
@@ -576,13 +742,36 @@
 
         cc.value = normalizeCC(cc.value);
 
+        updatePlaceholder();
         remask();
         syncHidden();
       }
     );
 
     /**
-     * Evita letras no telefone.
+     * Dispara geolocalização apenas no foco.
+     */
+    tel.addEventListener(
+      'focus',
+      startGeoDetection,
+      {
+        once: true
+      }
+    );
+
+    cc.addEventListener(
+      'focus',
+      startGeoDetection,
+      {
+        once: true
+      }
+    );
+
+    /**
+     * Impede letras digitadas no telefone.
+     *
+     * Não bloqueia backspace,
+     * delete, setas etc.
      */
     tel.addEventListener(
       'beforeinput',
@@ -605,12 +794,18 @@
     );
 
     /**
-     * Trata números colados.
+     * Colar telefone.
      */
     tel.addEventListener(
       'paste',
       function (e) {
         e.preventDefault();
+
+        /**
+         * Colar também conta como interação,
+         * mas não precisamos esperar a API.
+         */
+        startGeoDetection();
 
         var clipboard =
           e.clipboardData ||
@@ -623,7 +818,7 @@
         var raw = String(text || '').trim();
 
         /**
-         * Número internacional começando com +
+         * Número internacional.
          */
         if (raw.charAt(0) === '+') {
           var parsed = parseInternationalPhone(
@@ -634,9 +829,16 @@
           if (parsed) {
             ddiManuallyChanged = true;
 
-            cc.value = '+' + parsed.ddi;
-            tel.value = parsed.phone;
+            cc.value =
+              '+' + parsed.ddi;
 
+            cc.placeholder =
+              '+' + parsed.ddi;
+
+            tel.value =
+              parsed.phone;
+
+            updatePlaceholder();
             remask();
             syncHidden();
 
@@ -647,7 +849,8 @@
         /**
          * Número local.
          */
-        tel.value = onlyDigits(raw);
+        tel.value =
+          onlyDigits(raw);
 
         remask();
         syncHidden();
@@ -655,7 +858,8 @@
     );
 
     /**
-     * Garante sincronização antes do envio.
+     * Garante valor atualizado antes
+     * do envio pelo Webflow.
      */
     form.addEventListener(
       'submit',
@@ -667,51 +871,12 @@
 
     /**
      * Estado inicial.
+     *
+     * Não existe nenhuma chamada externa aqui.
      */
+    updatePlaceholder();
     remask();
     syncHidden();
-
-    /**
-     * Geolocalização por IP.
-     *
-     * O DDI padrão já aparece instantaneamente.
-     * Quando a API responder, atualiza o campo.
-     */
-    detectDDIByIP().then(
-      function (detectedDDI) {
-        if (!detectedDDI) {
-          return;
-        }
-
-        /**
-         * Se o usuário já mexeu no DDI,
-         * não sobrescreve.
-         */
-        if (ddiManuallyChanged) {
-          return;
-        }
-
-        cc.value = detectedDDI;
-        cc.placeholder = detectedDDI;
-
-        /**
-         * Ajusta placeholder do telefone
-         * quando ainda estiver vazio.
-         */
-        if (!tel.value) {
-          if (detectedDDI === '+55') {
-            tel.placeholder =
-              '(11) 98765-4321';
-          } else if (detectedDDI === '+351') {
-            tel.placeholder =
-              '912 345 678';
-          }
-        }
-
-        remask();
-        syncHidden();
-      }
-    );
   }
 
   function init() {
@@ -720,13 +885,15 @@
     var forms =
       document.querySelectorAll('form');
 
-    for (var i = 0; i < forms.length; i++) {
+    for (
+      var i = 0;
+      i < forms.length;
+      i++
+    ) {
       var form = forms[i];
 
       /**
-       * Pega apenas 1 telefone por formulário.
-       * Evita que campos gerados pelo script
-       * sejam processados novamente.
+       * Apenas um telefone por formulário.
        */
       var tel =
         form.querySelector(PHONE_SELECTOR);
