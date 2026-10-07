@@ -1,0 +1,15 @@
+/* Adciona um gradiente nas extremidades do carrossel de logos */
+.logo-wrap:before {
+    background: linear-gradient(90deg, #21201a 5%, transparent 50%, #21201a 100%);
+    display: block;
+    content: '';
+    z-index: 999 !important;
+    height: 65px;
+    margin-top: 0;
+    position: absolute;
+    width: 100%;
+}
+
+.logo-wrap {
+  overflow: hidden;
+}
