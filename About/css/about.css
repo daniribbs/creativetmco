@@ -1,6 +1,222 @@
-/* Adciona um gradiente nas extremidades do carrossel de logos */
-.logo-wrap:before {
-    background: linear-gradient(90deg, #21201a 5%, transparent 50%, #21201a 100%);
+/* ============================================================
+   1. ACCORDION — PROCESSO
+   ============================================================ */
+
+   .accordion-item-processo .accordion-content {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-content {
+    display: block !important;
+  }
+  
+  .accordion-item-processo .accordion-expand {
+    display: block !important;
+  }
+  
+  .accordion-item-processo .accordion-collapse {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-expand {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-collapse {
+    display: block !important;
+  }
+  
+  .accordion-item-processo,
+  .accordion-title,
+  .accordion-expand,
+  .accordion-collapse {
+    cursor: pointer;
+  }
+  
+  
+  /* ============================================================
+     2. GALERIA / CARROSSEL
+     ============================================================ */
+  
+  :root {
+    --grid-width: 1216px;
+    --gallery-gap: 32px;
+    --gallery-max: 1112px;
+    --radius: 24px;
+    --progress-ms: 6500ms;
+    --dot-w: 140px;
+    --dot-h: 8px;
+    --dot-bg: #322F2E;
+    --dot-fill: #F2E205;
+    --gallery-size: min(
+      var(--gallery-max),
+      calc(var(--grid-width) * 0.72)
+    );
+  }
+  
+  
+  .gallery-case {
+    overflow: hidden;
+    position: relative;
+  }
+  
+  
+  .gallery-case-wrap {
+    box-sizing: border-box;
+    padding-right: 0;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    transition: transform 550ms cubic-bezier(.2, .8, .2, 1);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    justify-content: flex-start !important;
+    align-items: stretch;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  
+  .gallery-case-wrap.is-dragging {
+    cursor: grabbing;
+  }
+  
+  .gallery-case-wrap,
+  .gallery-case-wrap * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+
+  .gallery-case_card,
+  .gallery-case-wrap > img {
+    float: none !important;
+    flex: 0 0 auto !important;
+    width: var(--gallery-size) !important;
+    height: auto !important;
+    aspect-ratio: 1112 / 625 !important;
+    border-radius: var(--radius);
+    overflow: hidden;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  
+  .gallery-case_card:not(:last-child),
+  .gallery-case-wrap > img:not(:last-child) {
+    margin-right: var(--gallery-gap) !important;
+  }
+  
+  
+  .gallery-case_card:last-child,
+  .gallery-case-wrap > img:last-child {
+    margin-right: 0 !important;
+  }
+  
+  
+  /* ============================================================
+     CONTROLES DA GALERIA
+     ============================================================ */
+  
+  .gallery-case_ui {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    margin-top: 32px;
+  }
+  
+  
+  .gallery-case_dots {
+    display: flex;
+    align-items: center;
+  
+    gap: 12px;
+  
+    overflow: hidden;
+  }
+  
+  
+  .gallery-dot {
+    width: var(--dot-w);
+    height: var(--dot-h);
+    background: var(--dot-bg);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  
+  
+  .gallery-dot-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--dot-fill);
+    transform: translateX(-100%);
+  }
+  
+  
+  .gallery-dot.is-active .gallery-dot-fill {
+    animation: dotProgress var(--progress-ms) linear forwards;
+  }
+  
+  
+  /* ------------------------------------------------------------
+     Movimento do preenchimento do indicador
+     ------------------------------------------------------------ */
+  @keyframes dotProgress {
+    from {
+      transform: translateX(-100%);
+    }
+  
+    to {
+      transform: translateX(0%);
+    }
+  }
+  
+  .arrow-slider,
+  .arrow-slider-2 {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  
+  /* ============================================================
+     GALERIA — TABLET E MOBILE
+     ============================================================ */
+  
+  @media (max-width: 991px) {
+  
+    :root {
+      --gallery-gap: 16px;
+      --dot-w: 88px;
+      --grid-width: calc(100vw - 32px);
+      --gallery-size: min(
+        var(--gallery-max),
+        var(--grid-width)
+      );
+    }
+    .gallery-case_dots {
+      display: none !important;
+    }
+  }
+  
+  
+  /* ============================================================
+     3. LOGO — FAIXA 
+     ============================================================ */
+  .logo-wrap:before {
+    background: linear-gradient(
+      90deg,
+      #21201a 5%,
+      transparent 50%,
+      #21201a 100%
+    );
     display: block;
     content: '';
     z-index: 999 !important;
@@ -8,8 +224,8 @@
     margin-top: 0;
     position: absolute;
     width: 100%;
-}
+  }
 
-.logo-wrap {
-  overflow: hidden;
-}
+  .logo-wrap {
+    overflow: hidden;
+  }
