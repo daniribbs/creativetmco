@@ -52,6 +52,8 @@
       var(--gallery-max),
       calc(var(--grid-width) * 0.72)
     );
+    --slide-ms: 900ms;
+    --slide-ease: cubic-bezier(.45, 0, .15, 1);
   }
   
   .gallery-case {
@@ -67,6 +69,7 @@
     gap: 0 !important;
     will-change: transform;
     transform: translate3d(0, 0, 0);
+    transition: transform var(--slide-ms) var(--slide-ease);
     margin-left: 0 !important;
     margin-right: 0 !important;
     justify-content: flex-start !important;

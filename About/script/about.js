@@ -482,7 +482,13 @@
   
     function next() {
   
-      normalizeIndex();
+      /* Só recua para os originais se faltar trilho à frente.
+         Parte da posição real, então não há salto visível,
+         mesmo com cliques rápidos durante a animação. */
+      if (index + 1 > absMaxIndex()) {
+        index -= total;
+        setTranslatePx(getActualTranslate() + total * step, false);
+      }
   
       index += 1;
   
@@ -497,7 +503,7 @@
          (sem animação) e depois anima para trás */
       if (index <= 0) {
         index = total;
-        setTransform(index, false);
+        setTranslatePx(getActualTranslate() - total * step, false);
       }
   
       index -= 1;
@@ -509,9 +515,11 @@
   
     function goTo(i) {
   
-      normalizeIndex();
+      /* Vai para o mesmo conjunto em que o índice atual está,
+         evitando um salto longo ao clicar num dot */
+      const base = Math.floor(index / total) * total;
   
-      index = Math.max(0, Math.min(total - 1, i));
+      index = Math.min(absMaxIndex(), base + Math.max(0, Math.min(total - 1, i)));
   
       setTransform(index, true);
   
