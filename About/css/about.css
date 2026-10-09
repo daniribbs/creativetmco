@@ -34,11 +34,11 @@
   }
   
   
-  /* ============================================================
-     2. GALERIA / CARROSSEL
-     ============================================================ */
-  
-  :root {
+/* ============================================================
+   2. GALERIA / CARROSSEL
+   ============================================================ */
+
+   :root {
     --grid-width: 1216px;
     --gallery-gap: 32px;
     --gallery-max: 1112px;
@@ -46,30 +46,27 @@
     --progress-ms: 6500ms;
     --dot-w: 140px;
     --dot-h: 8px;
-    --dot-bg: #322F2E;
-    --dot-fill: #F2E205;
+    --dot-bg: #322f2e;
+    --dot-fill: #f2e205;
     --gallery-size: min(
       var(--gallery-max),
       calc(var(--grid-width) * 0.72)
     );
   }
   
-  
   .gallery-case {
     overflow: hidden;
     position: relative;
+    width: 100%;
   }
-  
   
   .gallery-case-wrap {
     box-sizing: border-box;
-    padding-right: 0;
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 0 !important;
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 550ms cubic-bezier(.2, .8, .2, 1);
     margin-left: 0 !important;
     margin-right: 0 !important;
     justify-content: flex-start !important;
@@ -88,7 +85,7 @@
     user-select: none;
   }
   
-
+  /* Todos os slides (incluindo clones) mantêm margem direita constante */
   .gallery-case_card,
   .gallery-case-wrap > img {
     float: none !important;
@@ -103,20 +100,10 @@
     pointer-events: none;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    margin-right: var(--gallery-gap) !important; /* Espaçamento idêntico para todos */
   }
   
-  
-  .gallery-case_card:not(:last-child),
-  .gallery-case-wrap > img:not(:last-child) {
-    margin-right: var(--gallery-gap) !important;
-  }
-  
-  
-  .gallery-case_card:last-child,
-  .gallery-case-wrap > img:last-child {
-    margin-right: 0 !important;
-  }
-  
+  /* Apaga a regra de zerar o último filho para não quebrar a simetria dos clones */
   
   /* ============================================================
      CONTROLES DA GALERIA
@@ -126,20 +113,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-  
     margin-top: 32px;
   }
-  
   
   .gallery-case_dots {
     display: flex;
     align-items: center;
-  
     gap: 12px;
-  
     overflow: hidden;
   }
-  
   
   .gallery-dot {
     width: var(--dot-w);
@@ -151,7 +133,6 @@
     cursor: pointer;
   }
   
-  
   .gallery-dot-fill {
     position: absolute;
     inset: 0;
@@ -159,20 +140,14 @@
     transform: translateX(-100%);
   }
   
-  
   .gallery-dot.is-active .gallery-dot-fill {
     animation: dotProgress var(--progress-ms) linear forwards;
   }
   
-  
-  /* ------------------------------------------------------------
-     Movimento do preenchimento do indicador
-     ------------------------------------------------------------ */
   @keyframes dotProgress {
     from {
       transform: translateX(-100%);
     }
-  
     to {
       transform: translateX(0%);
     }
@@ -185,13 +160,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   
-  
   /* ============================================================
      GALERIA — TABLET E MOBILE
      ============================================================ */
   
   @media (max-width: 991px) {
-  
     :root {
       --gallery-gap: 16px;
       --dot-w: 88px;
@@ -201,15 +174,16 @@
         var(--grid-width)
       );
     }
+  
     .gallery-case_dots {
       display: none !important;
     }
   }
   
-  
   /* ============================================================
      3. LOGO — FAIXA 
      ============================================================ */
+  
   .logo-wrap:before {
     background: linear-gradient(
       90deg,
@@ -225,7 +199,7 @@
     position: absolute;
     width: 100%;
   }
-
+  
   .logo-wrap {
     overflow: hidden;
   }
