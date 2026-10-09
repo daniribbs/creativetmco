@@ -74,66 +74,92 @@
   
   
 /* ============================================================
-   2. GALERIA / CARROSSEL (INFINITO SEM ESPAÇO VAZIO)
+   2. GALERIA / CARROSSEL (INFINITO)
    ============================================================ */
 
    document.addEventListener("DOMContentLoaded", function () {
+
+    /* ----------------------------------------------------------
+       ELEMENTOS PRINCIPAIS
+       ---------------------------------------------------------- */
+  
     const section = document.querySelector(".gallery-case");
     const wrap = document.querySelector(".gallery-case-wrap");
     const dotsWrap = document.querySelector(".gallery-case_dots");
   
-    const btnPrev = document.querySelector(".arrow-slider.left, .arrow-slider-2.left");
-    const btnNext = document.querySelector(".arrow-slider.right, .arrow-slider-2.right");
+    /* Aceita .arrow-slider e .arrow-slider-2 */
+    const btnPrev = document.querySelector(
+      ".arrow-slider.left, .arrow-slider-2.left"
+    );
+    const btnNext = document.querySelector(
+      ".arrow-slider.right, .arrow-slider-2.right"
+    );
   
-    if (!section || !wrap) return;
-  
-    const track = wrap;
-  
-    let originalSlides = Array.from(track.querySelectorAll(".gallery-case_card"));
-    if (originalSlides.length === 0) {
-      originalSlides = Array.from(track.querySelectorAll(":scope > img"));
+    if (!section || !wrap) {
+      return;
     }
   
-    if (originalSlides.length < 2) return;
+    /* O próprio .gallery-case-wrap funciona como o trilho */
+    const track = wrap;
   
-    const N = originalSlides.length;
+    /* ----------------------------------------------------------
+       LOCALIZA OS SLIDES ORIGINAIS
+       ---------------------------------------------------------- */
+  
+    let slides = Array.from(track.querySelectorAll(".gallery-case_card"));
+  
+    if (slides.length === 0) {
+      slides = Array.from(track.querySelectorAll(":scope > img"));
+    }
+  
+    if (slides.length < 2) {
+      return;
+    }
+  
+    /* Quantidade de slides originais */
+    const total = slides.length;
+  
+  
+    /* ----------------------------------------------------------
+       CLONES PARA O LOOP INFINITO
+  
+       O trilho fica com 3 conjuntos: original + 2 clones.
+       O array "slides" continua com apenas os originais.
+       ---------------------------------------------------------- */
+  
+    const SETS = 3;
+  
+    for (let c = 1; c < SETS; c++) {
+      slides.forEach(function (slide) {
+        const clone = slide.cloneNode(true);
+        clone.setAttribute("aria-hidden", "true");
+        clone.dataset.clone = "true";
+        track.appendChild(clone);
+      });
+    }
+  
+  
+    /* ----------------------------------------------------------
+       CONFIGURAÇÕES
+       ---------------------------------------------------------- */
+  
     const PROGRESS_MS = 6500;
   
-    /* ----------------------------------------------------------
-       CLONAGEM DUPLA / MÚLTIPLA
-       Clonamos o conjunto para preencher a tela perfeitamente
-       ---------------------------------------------------------- */
-    // Clones no início (últimos itens)
-    const headClones = originalSlides.map((el) => {
-      const c = el.cloneNode(true);
-      c.classList.add("is-clone");
-      return c;
-    });
-  
-    // Clones no final (primeiros itens)
-    const tailClones = originalSlides.map((el) => {
-      const c = el.cloneNode(true);
-      c.classList.add("is-clone");
-      return c;
-    });
-  
-    // Inserção no DOM: [headClones ... originalSlides ... tailClones]
-    headClones.forEach((clone) => track.insertBefore(clone, originalSlides[0]));
-    tailClones.forEach((clone) => track.appendChild(clone));
-  
-    const allSlides = Array.from(track.children);
   
     /* ----------------------------------------------------------
-       ESTADO
+       ESTADO DA GALERIA
        ---------------------------------------------------------- */
-    // O primeiro slide original agora fica no índice N
-    let currentIndex = N; 
+  
+    let index = 0;
     let step = 0;
     let timer = null;
+    let gridWidth = 0;
+    let slidesPerView = 2;
     let dots = [];
-    let isTransitioning = false;
   
-    // Drag / Swipe
+  
+    /* ESTADO DO DRAG / SWIPE */
+  
     let isDown = false;
     let startX = 0;
     let startY = 0;
@@ -141,293 +167,666 @@
     let currentTranslate = 0;
     let lock = null;
   
-    const isMobile = () => window.matchMedia("(max-width: 991px)").matches;
+  
+    const isMobile = () => {
+      return window.matchMedia("(max-width: 991px)").matches;
+    };
+  
     let isInView = false;
     let isReady = false;
   
-    /* ----------------------------------------------------------
-       FULL BLEED / ALINHAMENTO
-       ---------------------------------------------------------- */
+  
+    /* Maior índice possível dentro do trilho com clones */
+    function absMaxIndex() {
+      return total * SETS - slidesPerView;
+    }
+  
+  
+    /* ==========================================================
+       AUTOPLAY
+       ========================================================== */
+  
+    function stopAutoplay() {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = null;
+    }
+  
+    function ensureAutoplay() {
+      if (!isReady) {
+        return;
+      }
+      if (!isInView) {
+        return;
+      }
+      restartAutoplay();
+    }
+  
+  
+    /* ==========================================================
+       AJUSTE DE LARGURA / FULL BLEED
+  
+       Mede a posição real da seção e a desloca até x = 0,
+       usando clientWidth (largura sem a barra de rolagem).
+       ========================================================== */
+  
     function applyFullBleedAligned() {
+  
+      /* Limpa ajustes anteriores para medir o layout original */
       section.style.width = "";
+      section.style.position = "";
+      section.style.left = "";
       section.style.marginLeft = "";
+      wrap.style.paddingLeft = "";
   
       const rect = section.getBoundingClientRect();
+  
       const left = Math.max(0, rect.left);
-      const gridWidth = Math.max(0, rect.width);
   
-      document.documentElement.style.setProperty("--grid-width", gridWidth + "px");
+      gridWidth = Math.max(0, rect.width);
   
-      section.style.width = "100vw";
-      section.style.marginLeft = "calc(50% - 50vw)";
+      /* Atualiza a variável CSS com a largura do grid */
+      document.documentElement.style.setProperty(
+        "--grid-width",
+        gridWidth + "px"
+      );
+  
+      /* Faz a seção ocupar toda a largura visível */
+      section.style.position = "relative";
+      section.style.left = -rect.left + "px";
+      section.style.width = document.documentElement.clientWidth + "px";
+  
+      /* Mantém o primeiro slide alinhado ao grid */
       wrap.style.paddingLeft = left + "px";
+      wrap.style.paddingRight = "0px";
     }
   
-    function getStep() {
-      const any = originalSlides[0];
-      const w = any.getBoundingClientRect().width || 625;
-      const mr = parseFloat(getComputedStyle(any).marginRight) || 0;
-      return w + mr;
-    }
+  
+    /* ==========================================================
+       ESPERA PELO CARREGAMENTO DAS IMAGENS
+       ========================================================== */
   
     function waitImages() {
-      const imgs = allSlides
-        .map((s) => (s.tagName === "IMG" ? s : s.querySelector("img")))
+  
+      const imgs = slides
+        .map(function (slide) {
+          return slide.tagName === "IMG" ? slide : slide.querySelector("img");
+        })
         .filter(Boolean);
   
       return Promise.all(
-        imgs.map((img) => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve) => {
+        imgs.map(function (img) {
+  
+          if (img.complete) {
+            return Promise.resolve();
+          }
+  
+          return new Promise(function (resolve) {
             img.addEventListener("load", resolve, { once: true });
             img.addEventListener("error", resolve, { once: true });
           });
+  
         })
       );
     }
   
-    /* ----------------------------------------------------------
-       TRANSFORMAÇÕES E RESET INVISÍVEL
-       ---------------------------------------------------------- */
-    function setTransform(i, withTransition = true) {
-      if (withTransition) {
-        track.style.transition = "transform 550ms cubic-bezier(.2, .8, .2, 1)";
-        isTransitioning = true;
-      } else {
-        track.style.transition = "none";
-        isTransitioning = false;
-      }
+  
+    /* ==========================================================
+       CALCULA O TAMANHO DE CADA PASSO
+       ========================================================== */
+  
+    function getStep() {
+  
+      const any = slides[0];
+  
+      const w = any.getBoundingClientRect().width || 625;
+  
+      const mr = parseFloat(getComputedStyle(any).marginRight) || 0;
+  
+      /* Largura do slide + espaçamento */
+      return w + mr;
+    }
+  
+  
+    /* ==========================================================
+       CALCULA QUANTOS SLIDES CABEM NA TELA
+       ========================================================== */
+  
+    function recalcLimits() {
+  
+      const any = slides[0];
+  
+      const mr = parseFloat(getComputedStyle(any).marginRight) || 0;
+  
+      const k = Math.floor((gridWidth + mr) / step);
+  
+      slidesPerView = Math.max(1, Math.min(total, k || 1));
+    }
+  
+  
+    /* ==========================================================
+       MOVIMENTAÇÃO DO CARROSSEL
+       ========================================================== */
+  
+    function setTransform(i, withTransition) {
+  
+      track.style.transition = withTransition ? "" : "none";
   
       currentTranslate = -i * step;
-      track.style.transform = `translate3d(${currentTranslate}px, 0, 0)`;
   
+      track.style.transform =
+        "translate3d(" + currentTranslate + "px, 0, 0)";
+  
+      /* Força atualização quando não há transição */
       if (!withTransition) {
-        track.getBoundingClientRect(); // Reflow imediato
+        track.getBoundingClientRect();
+        track.style.transition = "";
       }
     }
   
-    // Quando chega no final da animação, fazemos o salto transparente
-    track.addEventListener("transitionend", () => {
-      isTransitioning = false;
+    /* Move para uma posição em pixels (usado no drag) */
+    function setTranslatePx(px, withTransition) {
   
-      // Se avançou além dos itens originais -> reseta para a posição equivalente central
-      if (currentIndex >= N * 2) {
-        currentIndex -= N;
-        setTransform(currentIndex, false);
+      track.style.transition = withTransition ? "" : "none";
+  
+      currentTranslate = px;
+  
+      track.style.transform =
+        "translate3d(" + currentTranslate + "px, 0, 0)";
+  
+      if (!withTransition) {
+        track.getBoundingClientRect();
+        track.style.transition = "";
       }
-      // Se recuou antes dos itens originais -> reseta para a posição equivalente central
-      else if (currentIndex < N) {
-        currentIndex += N;
-        setTransform(currentIndex, false);
+    }
+  
+    /* Lê a posição real do trilho (inclusive no meio de uma animação) */
+    function getActualTranslate() {
+  
+      const t = getComputedStyle(track).transform;
+  
+      if (!t || t === "none") {
+        return 0;
       }
+  
+      return new DOMMatrixReadOnly(t).m41;
+    }
+  
+  
+    /* ==========================================================
+       LOOP: VOLTA PARA O CONJUNTO ORIGINAL
+  
+       Quando o índice entra na área dos clones, salta (sem
+       animação) para a posição equivalente nos originais.
+       ========================================================== */
+  
+    function normalizeIndex() {
+  
+      if (index >= total) {
+  
+        while (index >= total) {
+          index -= total;
+        }
+  
+        setTransform(index, false);
+      }
+    }
+  
+    track.addEventListener("transitionend", function (e) {
+  
+      if (e.target !== track || e.propertyName !== "transform") {
+        return;
+      }
+  
+      normalizeIndex();
     });
   
-    /* ----------------------------------------------------------
-       INDICADORES (DOTS)
-       ---------------------------------------------------------- */
+  
+    /* ==========================================================
+       DOTS / INDICADORES (um por slide original)
+       ========================================================== */
+  
     function buildDots() {
-      if (!dotsWrap || isMobile()) return;
+  
+      /* Dots não aparecem no mobile */
+      if (!dotsWrap || isMobile()) {
+        return;
+      }
   
       dotsWrap.innerHTML = "";
+  
       dots = [];
   
-      for (let i = 0; i < N; i++) {
+      for (let i = 0; i < total; i++) {
+  
         const dot = document.createElement("div");
+  
         dot.className = "gallery-dot";
         dot.setAttribute("role", "button");
         dot.setAttribute("tabindex", "0");
         dot.setAttribute("aria-label", "Ir para posição " + (i + 1));
   
+        /* Parte interna que será preenchida */
         const fill = document.createElement("div");
+  
         fill.className = "gallery-dot-fill";
+  
         dot.appendChild(fill);
   
         dot.addEventListener("click", () => goTo(i));
+  
+        /* Enter ou Espaço também ativam o dot */
+        dot.addEventListener("keydown", (e) => {
+  
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goTo(i);
+          }
+  
+        });
+  
         dotsWrap.appendChild(dot);
+  
         dots.push(dot);
       }
     }
   
-    function updateDots() {
-      if (isMobile() || !dots.length) return;
+    /* Reinicia a animação do indicador ativo */
+    function restartDotProgress() {
   
-      const realIndex = (currentIndex % N + N) % N;
-  
-      dots.forEach((dot) => dot.classList.remove("is-active"));
-  
-      const active = dots[realIndex];
-      if (active) {
-        void active.offsetWidth;
-        active.classList.add("is-active");
+      if (isMobile()) {
+        return;
       }
+  
+      if (!dots.length) {
+        return;
+      }
+  
+      dots.forEach(function (dot) {
+        dot.classList.remove("is-active");
+      });
+  
+      const active = dots[index % total];
+  
+      if (!active) {
+        return;
+      }
+  
+      /* Força reflow para reiniciar a animação CSS */
+      void active.offsetWidth;
+  
+      active.classList.add("is-active");
     }
   
-    /* ----------------------------------------------------------
-       AUTOPLAY
-       ---------------------------------------------------------- */
-    function stopAutoplay() {
-      if (timer) clearTimeout(timer);
-      timer = null;
-    }
-  
+    /* Reinicia o timer do autoplay */
     function restartAutoplay() {
-      if (!isInView || !isReady) return;
-      stopAutoplay();
-      updateDots();
+  
+      if (!isInView) {
+        return;
+      }
+  
+      if (timer) {
+        clearTimeout(timer);
+      }
+  
+      restartDotProgress();
+  
       timer = setTimeout(() => next(), PROGRESS_MS);
     }
   
-    function ensureAutoplay() {
-      if (isReady && isInView) restartAutoplay();
-    }
   
-    /* ----------------------------------------------------------
+    /* ==========================================================
        NAVEGAÇÃO
-       ---------------------------------------------------------- */
+       ========================================================== */
+  
     function next() {
-      if (isTransitioning) return;
-      currentIndex++;
-      setTransform(currentIndex, true);
+  
+      normalizeIndex();
+  
+      index += 1;
+  
+      setTransform(index, true);
+  
       restartAutoplay();
     }
   
     function prev() {
-      if (isTransitioning) return;
-      currentIndex--;
-      setTransform(currentIndex, true);
+  
+      /* No primeiro slide, salta para o mesmo slide nos clones
+         (sem animação) e depois anima para trás */
+      if (index <= 0) {
+        index = total;
+        setTransform(index, false);
+      }
+  
+      index -= 1;
+  
+      setTransform(index, true);
+  
       restartAutoplay();
     }
   
     function goTo(i) {
-      if (isTransitioning) return;
-      currentIndex = N + i; // Direciona para o slide dentro do bloco original
-      setTransform(currentIndex, true);
+  
+      normalizeIndex();
+  
+      index = Math.max(0, Math.min(total - 1, i));
+  
+      setTransform(index, true);
+  
       restartAutoplay();
     }
   
-    /* ----------------------------------------------------------
-       SETAS
-       ---------------------------------------------------------- */
-    if (btnNext) btnNext.addEventListener("click", () => { isInView = true; next(); });
-    if (btnPrev) btnPrev.addEventListener("click", () => { isInView = true; prev(); });
   
-    /* ----------------------------------------------------------
-       DRAG / SWIPE
-       ---------------------------------------------------------- */
-    function pointerXY(e) {
-      if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-      return { x: e.clientX, y: e.clientY };
+    /* ==========================================================
+       EVENTOS DAS SETAS
+       ========================================================== */
+  
+    if (btnNext) {
+      btnNext.addEventListener("click", () => {
+        isInView = true;
+        next();
+      });
     }
   
-    function onDown(e) {
-      const target = e.target;
-      if (target && (target.closest(".arrow-slider") || target.closest(".arrow-slider-2") || target.closest(".gallery-dot"))) return;
-  
-      isDown = true;
-      lock = null;
-      const p = pointerXY(e);
-      startX = p.x;
-      startY = p.y;
-      startTranslate = currentTranslate;
-  
-      stopAutoplay();
-      track.classList.add("is-dragging");
-      track.style.transition = "none";
+    if (btnPrev) {
+      btnPrev.addEventListener("click", () => {
+        isInView = true;
+        prev();
+      });
     }
   
-    function onMove(e) {
-      if (!isDown) return;
-      const p = pointerXY(e);
-      const dx = p.x - startX;
-      const dy = p.y - startY;
+    /* Permite usar as setas com teclado */
+    [btnPrev, btnNext].forEach(function (btn) {
   
-      if (!lock) {
-        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
-          lock = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-        } else return;
-      }
-  
-      if (lock === "y") return;
-      if (e.cancelable) e.preventDefault();
-  
-      currentTranslate = startTranslate + dx;
-      track.style.transform = `translate3d(${currentTranslate}px, 0, 0)`;
-    }
-  
-    function onUp() {
-      if (!isDown) return;
-      isDown = false;
-      track.classList.remove("is-dragging");
-  
-      if (lock !== "x") {
-        ensureAutoplay();
+      if (!btn) {
         return;
       }
   
-      const movedPx = currentTranslate - startTranslate;
-      const threshold = step * 0.18;
+      btn.setAttribute("role", "button");
+      btn.setAttribute("tabindex", "0");
   
-      if (movedPx < -threshold) {
-        currentIndex++;
-      } else if (movedPx > threshold) {
-        currentIndex--;
+      btn.addEventListener("keydown", function (e) {
+  
+        if (e.key === "Enter" || e.key === " ") {
+  
+          e.preventDefault();
+  
+          isInView = true;
+  
+          btn === btnNext ? next() : prev();
+        }
+  
+      });
+  
+    });
+  
+  
+    /* ==========================================================
+       DRAG / SWIPE
+       ========================================================== */
+  
+    /* Converte a posição atual em um índice de slide */
+    function clampIndexFromTranslate(px) {
+  
+      const raw = Math.round(Math.abs(px) / step);
+  
+      return Math.max(0, Math.min(absMaxIndex(), raw));
+    }
+  
+    /* Obtém a posição X/Y do mouse ou touch */
+    function pointerXY(e) {
+  
+      if (e.touches && e.touches[0]) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
   
-      setTransform(currentIndex, true);
+      if (e.changedTouches && e.changedTouches[0]) {
+        return {
+          x: e.changedTouches[0].clientX,
+          y: e.changedTouches[0].clientY
+        };
+      }
+  
+      return { x: e.clientX, y: e.clientY };
+    }
+  
+    /* Início do drag/swipe */
+    function onDown(e) {
+  
+      const target = e.target;
+  
+      /* Não inicia drag ao clicar nas setas ou dots */
+      if (
+        target &&
+        (
+          target.closest(".arrow-slider") ||
+          target.closest(".arrow-slider-2") ||
+          target.closest(".gallery-dot")
+        )
+      ) {
+        return;
+      }
+  
+      isDown = true;
+  
+      lock = null;
+  
+      const p = pointerXY(e);
+  
+      startX = p.x;
+      startY = p.y;
+  
+      /* Pausa o autoplay durante o drag */
+      stopAutoplay();
+  
+      track.classList.add("is-dragging");
+  
+      /* Congela o trilho na posição real e o leva para o conjunto
+         do meio, deixando espaço para arrastar nos dois sentidos.
+         Os conjuntos são idênticos, então o salto é invisível. */
+      const cycle = total * step;
+  
+      let pos = -getActualTranslate();
+  
+      pos = ((pos % cycle) + cycle) % cycle + cycle;
+  
+      setTranslatePx(-pos, false);
+  
+      index = clampIndexFromTranslate(currentTranslate);
+  
+      startTranslate = currentTranslate;
+    }
+  
+    /* Movimento durante o drag/swipe */
+    function onMove(e) {
+  
+      if (!isDown) {
+        return;
+      }
+  
+      const p = pointerXY(e);
+  
+      const dx = p.x - startX;
+      const dy = p.y - startY;
+  
+      /* Descobre se o movimento é horizontal ou vertical */
+      if (!lock) {
+  
+        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+          lock = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        } else {
+          return;
+        }
+      }
+  
+      /* Movimento vertical: deixa o navegador controlar */
+      if (lock === "y") {
+        return;
+      }
+  
+      /* Impede o scroll horizontal padrão */
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+  
+      /* Limites do trilho com clones */
+      const minPx = -absMaxIndex() * step;
+      const maxPx = 0;
+  
+      const nextPx = Math.max(minPx, Math.min(maxPx, startTranslate + dx));
+  
+      setTranslatePx(nextPx, false);
+    }
+  
+    /* Final do drag/swipe */
+    function onUp() {
+  
+      if (!isDown) {
+        return;
+      }
+  
+      isDown = false;
+  
+      track.classList.remove("is-dragging");
+  
+      /* Encaixa no slide mais próximo (também cobre um simples
+         clique que congelou uma animação em andamento) */
+      index = clampIndexFromTranslate(currentTranslate);
+  
+      setTransform(index, true);
+  
       ensureAutoplay();
     }
+  
+  
+    /* EVENTOS DE TOUCH */
   
     track.addEventListener("touchstart", onDown, { passive: true });
     track.addEventListener("touchmove", onMove, { passive: false });
     track.addEventListener("touchend", onUp, { passive: true });
     track.addEventListener("touchcancel", onUp, { passive: true });
   
-    track.addEventListener("mousedown", (e) => { e.preventDefault(); onDown(e); });
+  
+    /* EVENTOS DE MOUSE */
+  
+    track.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      onDown(e);
+    });
+  
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   
-    /* ----------------------------------------------------------
-       INICIALIZAÇÃO
-       ---------------------------------------------------------- */
+  
+    /* ==========================================================
+       INICIALIZAÇÃO DA GALERIA
+       ========================================================== */
+  
     applyFullBleedAligned();
   
-    waitImages().then(() => {
+    waitImages().then(function () {
+  
+      /* Reaplica o alinhamento com imagens e layout já estáveis */
+      applyFullBleedAligned();
+  
       step = getStep();
+  
+      recalcLimits();
+  
       buildDots();
   
-      // Posiciona exatamente no primeiro slide do bloco central (índice N)
-      setTransform(currentIndex, false);
+      /* Posiciona no primeiro slide */
+      setTransform(index, false);
   
       isReady = true;
   
+      /* OBSERVER: o autoplay só roda com a galeria visível */
       if ("IntersectionObserver" in window) {
+  
         const io = new IntersectionObserver(
-          (entries) => {
+          function (entries) {
+  
             const entry = entries[0];
-            isInView = entry && entry.isIntersecting && entry.intersectionRatio >= 0.35;
-            if (isInView) restartAutoplay();
-            else stopAutoplay();
+  
+            isInView =
+              entry &&
+              entry.isIntersecting &&
+              entry.intersectionRatio >= 0.35;
+  
+            if (isInView) {
+              restartAutoplay();
+            } else {
+              stopAutoplay();
+            }
+  
           },
           { threshold: [0, 0.35, 0.6, 1] }
         );
+  
         io.observe(section);
+  
       } else {
+  
+        /* Fallback para navegadores sem IntersectionObserver */
         isInView = true;
+  
         restartAutoplay();
       }
+  
     });
   
-    window.addEventListener("resize", () => {
+  
+    /* ==========================================================
+       RESPONSIVIDADE / RESIZE
+       ========================================================== */
+  
+    window.addEventListener("resize", function () {
+  
+      /* Recalcula o alinhamento */
       applyFullBleedAligned();
-      step = getStep();
+  
+      /* Recalcula o tamanho dos slides */
+      const newStep = getStep();
+  
+      if (Math.abs(newStep - step) > 0.5) {
+        step = newStep;
+      }
+  
+      recalcLimits();
+  
+      /* Recria os indicadores */
+      if (dotsWrap) {
+        dotsWrap.innerHTML = "";
+      }
+  
+      dots = [];
+  
       buildDots();
-      setTransform(currentIndex, false);
+  
+      /* Reposiciona o slide atual */
+      normalizeIndex();
+  
+      setTransform(index, false);
+  
       ensureAutoplay();
+  
     });
   
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopAutoplay();
-      else ensureAutoplay();
+  
+    /* ==========================================================
+       VISIBILIDADE DA ABA
+       ========================================================== */
+  
+    document.addEventListener("visibilitychange", function () {
+  
+      if (document.hidden) {
+        stopAutoplay();
+      } else {
+        ensureAutoplay();
+      }
+  
     });
+  
   });
