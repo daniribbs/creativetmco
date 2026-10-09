@@ -74,7 +74,7 @@
   
   
 /* ============================================================
-   2. GALERIA / CARROSSEL (ROLAGEM INFINITA)
+   2. GALERIA / CARROSSEL (INFINITO SEM ESPAÇO VAZIO)
    ============================================================ */
 
    document.addEventListener("DOMContentLoaded", function () {
@@ -89,7 +89,6 @@
   
     const track = wrap;
   
-    // Localiza os elementos originais
     let originalSlides = Array.from(track.querySelectorAll(".gallery-case_card"));
     if (originalSlides.length === 0) {
       originalSlides = Array.from(track.querySelectorAll(":scope > img"));
@@ -97,37 +96,44 @@
   
     if (originalSlides.length < 2) return;
   
+    const N = originalSlides.length;
     const PROGRESS_MS = 6500;
   
     /* ----------------------------------------------------------
-       CLONAGEM DOS SLIDES PARA LOOP INFINITO
+       CLONAGEM DUPLA / MÚLTIPLA
+       Clonamos o conjunto para preencher a tela perfeitamente
        ---------------------------------------------------------- */
-    const firstClone = originalSlides[0].cloneNode(true);
-    const lastClone = originalSlides[originalSlides.length - 1].cloneNode(true);
+    // Clones no início (últimos itens)
+    const headClones = originalSlides.map((el) => {
+      const c = el.cloneNode(true);
+      c.classList.add("is-clone");
+      return c;
+    });
   
-    firstClone.classList.add("is-clone");
-    lastClone.classList.add("is-clone");
+    // Clones no final (primeiros itens)
+    const tailClones = originalSlides.map((el) => {
+      const c = el.cloneNode(true);
+      c.classList.add("is-clone");
+      return c;
+    });
   
-    // Insere o último clone no início e o primeiro clone no final
-    track.appendChild(firstClone);
-    track.insertBefore(lastClone, originalSlides[0]);
+    // Inserção no DOM: [headClones ... originalSlides ... tailClones]
+    headClones.forEach((clone) => track.insertBefore(clone, originalSlides[0]));
+    tailClones.forEach((clone) => track.appendChild(clone));
   
     const allSlides = Array.from(track.children);
   
     /* ----------------------------------------------------------
-       ESTADO DA GALERIA
+       ESTADO
        ---------------------------------------------------------- */
-    let currentIndex = 1; // Inicia no índice 1 (primeiro slide real)
+    // O primeiro slide original agora fica no índice N
+    let currentIndex = N; 
     let step = 0;
     let timer = null;
-    let gridWidth = 0;
-    let paddingLeftVal = 0;
     let dots = [];
     let isTransitioning = false;
   
-    /* ----------------------------------------------------------
-       ESTADO DO DRAG / SWIPE
-       ---------------------------------------------------------- */
+    // Drag / Swipe
     let isDown = false;
     let startX = 0;
     let startY = 0;
@@ -136,33 +142,27 @@
     let lock = null;
   
     const isMobile = () => window.matchMedia("(max-width: 991px)").matches;
-  
     let isInView = false;
     let isReady = false;
   
-    /* ==========================================================
-       AJUSTE DE LARGURA / FULL BLEED COM ALINHAMENTO
-       ========================================================== */
+    /* ----------------------------------------------------------
+       FULL BLEED / ALINHAMENTO
+       ---------------------------------------------------------- */
     function applyFullBleedAligned() {
       section.style.width = "";
       section.style.marginLeft = "";
   
       const rect = section.getBoundingClientRect();
-      paddingLeftVal = Math.max(0, rect.left);
-      gridWidth = Math.max(0, rect.width);
+      const left = Math.max(0, rect.left);
+      const gridWidth = Math.max(0, rect.width);
   
       document.documentElement.style.setProperty("--grid-width", gridWidth + "px");
   
       section.style.width = "100vw";
       section.style.marginLeft = "calc(50% - 50vw)";
-  
-      // Aplica o padding esquerdo no container para manter o alinhamento com o grid
-      wrap.style.paddingLeft = paddingLeftVal + "px";
+      wrap.style.paddingLeft = left + "px";
     }
   
-    /* ==========================================================
-       CÁLCULO DO PASSO (STEP)
-       ========================================================== */
     function getStep() {
       const any = originalSlides[0];
       const w = any.getBoundingClientRect().width || 625;
@@ -172,7 +172,7 @@
   
     function waitImages() {
       const imgs = allSlides
-        .map((slide) => (slide.tagName === "IMG" ? slide : slide.querySelector("img")))
+        .map((s) => (s.tagName === "IMG" ? s : s.querySelector("img")))
         .filter(Boolean);
   
       return Promise.all(
@@ -186,9 +186,9 @@
       );
     }
   
-    /* ==========================================================
-       MOVIMENTAÇÃO DO CARROSSEL
-       ========================================================== */
+    /* ----------------------------------------------------------
+       TRANSFORMAÇÕES E RESET INVISÍVEL
+       ---------------------------------------------------------- */
     function setTransform(i, withTransition = true) {
       if (withTransition) {
         track.style.transition = "transform 550ms cubic-bezier(.2, .8, .2, 1)";
@@ -198,42 +198,40 @@
         isTransitioning = false;
       }
   
-      // Calcula a posição considerando o deslocamento do clone inicial
       currentTranslate = -i * step;
       track.style.transform = `translate3d(${currentTranslate}px, 0, 0)`;
   
       if (!withTransition) {
-        track.getBoundingClientRect(); // Força repaint
+        track.getBoundingClientRect(); // Reflow imediato
       }
     }
   
-    // Quando a transição suave termina, verifica se precisa de um salto invisível (reset do loop)
+    // Quando chega no final da animação, fazemos o salto transparente
     track.addEventListener("transitionend", () => {
       isTransitioning = false;
   
-      // Se chegou ao clone do final -> salta instantaneamente para o slide 1 real
-      if (currentIndex >= allSlides.length - 1) {
-        currentIndex = 1;
+      // Se avançou além dos itens originais -> reseta para a posição equivalente central
+      if (currentIndex >= N * 2) {
+        currentIndex -= N;
         setTransform(currentIndex, false);
       }
-  
-      // Se chegou ao clone do início -> salta instantaneamente para o último slide real
-      if (currentIndex <= 0) {
-        currentIndex = originalSlides.length;
+      // Se recuou antes dos itens originais -> reseta para a posição equivalente central
+      else if (currentIndex < N) {
+        currentIndex += N;
         setTransform(currentIndex, false);
       }
     });
   
-    /* ==========================================================
+    /* ----------------------------------------------------------
        INDICADORES (DOTS)
-       ========================================================== */
+       ---------------------------------------------------------- */
     function buildDots() {
       if (!dotsWrap || isMobile()) return;
   
       dotsWrap.innerHTML = "";
       dots = [];
   
-      for (let i = 0; i < originalSlides.length; i++) {
+      for (let i = 0; i < N; i++) {
         const dot = document.createElement("div");
         dot.className = "gallery-dot";
         dot.setAttribute("role", "button");
@@ -245,13 +243,6 @@
         dot.appendChild(fill);
   
         dot.addEventListener("click", () => goTo(i));
-        dot.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            goTo(i);
-          }
-        });
-  
         dotsWrap.appendChild(dot);
         dots.push(dot);
       }
@@ -260,21 +251,20 @@
     function updateDots() {
       if (isMobile() || !dots.length) return;
   
-      // Mapeia o índice atual para o intervalo dos slides reais (0 a originalSlides.length - 1)
-      let realIndex = (currentIndex - 1 + originalSlides.length) % originalSlides.length;
+      const realIndex = (currentIndex % N + N) % N;
   
       dots.forEach((dot) => dot.classList.remove("is-active"));
   
       const active = dots[realIndex];
       if (active) {
-        void active.offsetWidth; // Reinicia animação CSS
+        void active.offsetWidth;
         active.classList.add("is-active");
       }
     }
   
-    /* ==========================================================
+    /* ----------------------------------------------------------
        AUTOPLAY
-       ========================================================== */
+       ---------------------------------------------------------- */
     function stopAutoplay() {
       if (timer) clearTimeout(timer);
       timer = null;
@@ -291,9 +281,9 @@
       if (isReady && isInView) restartAutoplay();
     }
   
-    /* ==========================================================
-       CONTROLES DE NAVEGAÇÃO
-       ========================================================== */
+    /* ----------------------------------------------------------
+       NAVEGAÇÃO
+       ---------------------------------------------------------- */
     function next() {
       if (isTransitioning) return;
       currentIndex++;
@@ -310,44 +300,20 @@
   
     function goTo(i) {
       if (isTransitioning) return;
-      currentIndex = i + 1; // +1 devido ao clone inicial
+      currentIndex = N + i; // Direciona para o slide dentro do bloco original
       setTransform(currentIndex, true);
       restartAutoplay();
     }
   
-    /* ==========================================================
-       EVENTOS DAS SETAS E TECLADO
-       ========================================================== */
-    if (btnNext) {
-      btnNext.addEventListener("click", () => {
-        isInView = true;
-        next();
-      });
-    }
+    /* ----------------------------------------------------------
+       SETAS
+       ---------------------------------------------------------- */
+    if (btnNext) btnNext.addEventListener("click", () => { isInView = true; next(); });
+    if (btnPrev) btnPrev.addEventListener("click", () => { isInView = true; prev(); });
   
-    if (btnPrev) {
-      btnPrev.addEventListener("click", () => {
-        isInView = true;
-        prev();
-      });
-    }
-  
-    [btnPrev, btnNext].forEach((btn) => {
-      if (!btn) return;
-      btn.setAttribute("role", "button");
-      btn.setAttribute("tabindex", "0");
-      btn.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          isInView = true;
-          btn === btnNext ? next() : prev();
-        }
-      });
-    });
-  
-    /* ==========================================================
+    /* ----------------------------------------------------------
        DRAG / SWIPE
-       ========================================================== */
+       ---------------------------------------------------------- */
     function pointerXY(e) {
       if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
@@ -400,7 +366,7 @@
       }
   
       const movedPx = currentTranslate - startTranslate;
-      const threshold = step * 0.18; // Sensibilidade do swipe
+      const threshold = step * 0.18;
   
       if (movedPx < -threshold) {
         currentIndex++;
@@ -417,23 +383,20 @@
     track.addEventListener("touchend", onUp, { passive: true });
     track.addEventListener("touchcancel", onUp, { passive: true });
   
-    track.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      onDown(e);
-    });
+    track.addEventListener("mousedown", (e) => { e.preventDefault(); onDown(e); });
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   
-    /* ==========================================================
-       INICIALIZAÇÃO DA GALERIA
-       ========================================================== */
+    /* ----------------------------------------------------------
+       INICIALIZAÇÃO
+       ---------------------------------------------------------- */
     applyFullBleedAligned();
   
     waitImages().then(() => {
       step = getStep();
       buildDots();
   
-      // Posiciona imediatamente no primeiro slide real (índice 1), sem transição
+      // Posiciona exatamente no primeiro slide do bloco central (índice N)
       setTransform(currentIndex, false);
   
       isReady = true;
@@ -455,9 +418,6 @@
       }
     });
   
-    /* ==========================================================
-       RESPONSIVIDADE E VISIBILIDADE
-       ========================================================== */
     window.addEventListener("resize", () => {
       applyFullBleedAligned();
       step = getStep();
