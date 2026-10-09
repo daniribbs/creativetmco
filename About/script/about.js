@@ -1,49 +1,77 @@
 /* ============================================================
-   1. ACCORDION — PROCESSO
+   1. ACCORDION — PROCESSO (COM IMAGEM POR ITEM)
    ============================================================ */
 
    (function () {
 
+    var ITEM_SELECTOR = ".accordion-item-processo";
+    var IMAGE_SELECTOR = ".processo-image";
+  
+    var OPEN_CLASS = "is-open";
+    var ACTIVE_CLASS = "is-active";
+  
+  
     /* ----------------------------------------------------------
-       Inicializa todos os accordions como fechados
+       Listas atuais de itens e imagens (na ordem do HTML)
        ---------------------------------------------------------- */
-    function initAccordion() {
-      document
-        .querySelectorAll(".accordion-item-processo")
-        .forEach(function (item) {
+    function getItems() {
+      return Array.prototype.slice.call(
+        document.querySelectorAll(ITEM_SELECTOR)
+      );
+    }
   
-          item.classList.remove("is-open");
-  
-        });
+    function getImages() {
+      return Array.prototype.slice.call(
+        document.querySelectorAll(IMAGE_SELECTOR)
+      );
     }
   
   
     /* ----------------------------------------------------------
-       Executa a inicialização quando o DOM estiver pronto
+       Mostra a imagem de posição "i" e esconde as outras.
+  
+       O item 1 do accordion corresponde à imagem 1, o item 2
+       à imagem 2, e assim por diante.
        ---------------------------------------------------------- */
+    function showImage(i) {
+  
+      var images = getImages();
+  
+      /* Se não existir imagem para esse item, mantém a atual */
+      if (!images[i]) {
+        return;
+      }
+  
+      images.forEach(function (img, n) {
+        img.classList.toggle(ACTIVE_CLASS, n === i);
+      });
+    }
+  
+  
+    /* ----------------------------------------------------------
+       Inicializa: todos os accordions fechados e a primeira
+       imagem visível por padrão
+       ---------------------------------------------------------- */
+    function initAccordion() {
+  
+      getItems().forEach(function (item) {
+        item.classList.remove(OPEN_CLASS);
+      });
+  
+      showImage(0);
+    }
+  
+  
     if (document.readyState === "loading") {
   
-      document.addEventListener(
-        "DOMContentLoaded",
-        initAccordion
-      );
+      document.addEventListener("DOMContentLoaded", initAccordion);
   
     } else {
   
       initAccordion();
   
     }
-  
-  
-    /* ----------------------------------------------------------
-       Delegação de evento:
-  
-       Permite clicar em qualquer parte do item para abrir/
-       fechar o accordion.
-  
-       Links e botões são ignorados para não interferir
-       em outras ações da página.
-       ---------------------------------------------------------- */
+
     document.addEventListener("click", function (event) {
   
       /* Não interfere em links ou botões */
@@ -51,27 +79,36 @@
         return;
       }
   
-  
       /* Descobre qual accordion foi clicado */
-      var item = event.target.closest(
-        ".accordion-item-processo"
-      );
+      var item = event.target.closest(ITEM_SELECTOR);
   
-  
-      /* Se o clique não estiver dentro de um accordion,
-         não faz nada */
       if (!item) {
         return;
       }
   
+      var items = getItems();
   
-      /* Abre ou fecha o accordion */
-      item.classList.toggle("is-open");
+      var willOpen = !item.classList.contains(OPEN_CLASS);
+  
+      /* Fecha os outros itens */
+      items.forEach(function (other) {
+        if (other !== item) {
+          other.classList.remove(OPEN_CLASS);
+        }
+      });
+  
+      /* Abre ou fecha o item clicado */
+      item.classList.toggle(OPEN_CLASS, willOpen);
+  
+      /* Ao abrir, troca para a imagem correspondente.
+         Ao fechar, a imagem atual permanece. */
+      if (willOpen) {
+        showImage(items.indexOf(item));
+      }
   
     });
   
   })();
-  
   
 /* ============================================================
    2. GALERIA / CARROSSEL (INFINITO)
