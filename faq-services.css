@@ -1,0 +1,36 @@
+  /* Garante que o conteúdo da resposta comece oculto e tenha transição suave */
+  .accordion-2 .text-14 {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  
+  /* Quando o item estiver aberto via JavaScript */
+  .accordion-2.is-open .text-14 {
+    max-height: 200px; /* Ajuste se a resposta for muito longa */
+    padding-top: 12px;  /* Espaçamento superior opcional quando aberto */
+  }
+  
+  /* Deixa o cursor com formato de clique no header do acordeão */
+  .accordion-2 {
+    cursor: pointer;
+  }
+  
+  /* Lógica dos ícones de mais e menos */
+  /* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
+  .accordion-2 .minus-2 img:nth-child(1) {
+    display: block;
+  }
+  .accordion-2 .minus-2 img:nth-child(2) {
+    display: none;
+  }
+  
+  /* Quando aberto, inverte: esconde o mais e mostra o menos */
+  .accordion-2.is-open .minus-2 img:nth-child(1) {
+    display: none;
+  }
+  .accordion-2.is-open .minus-2 img:nth-child(2) {
+    display: block;
+  }
