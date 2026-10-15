@@ -1,9 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const accordions = document.querySelectorAll(".accordion-2");
+    const accordions = document.querySelectorAll(".item-faq");
   
-    accordions.forEach((accordion) => {
-      accordion.addEventListener("click", function () {
-        // Alterna a classe 'is-open' no item clicado
+    items.forEach((item) => {
+      item.addEventListener("click", function () {
         this.classList.toggle("is-open");
       });
     });
