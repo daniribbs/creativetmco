@@ -19,17 +19,17 @@
   }
   
   /* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
-  .conteudo-item-faq .minus-2 img:nth-child(1) {
+  .conteudo-item-faq .minus img:nth-child(1) {
     display: block;
   }
-  .conteudo-item-faq .minus-2 img:nth-child(2) {
+  .conteudo-item-faq .minus img:nth-child(2) {
     display: none;
   }
   
   /* Quando aberto, inverte: esconde o mais e mostra o menos */
-  .conteudo-item-faq.is-open .minus-2 img:nth-child(1) {
+  .conteudo-item-faq.is-open .minus img:nth-child(1) {
     display: none;
   }
-  .conteudo-item-faq.is-open .minus-2 img:nth-child(2) {
+  .conteudo-item-faq.is-open .minus img:nth-child(2) {
     display: block;
   }
