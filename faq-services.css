@@ -1,35 +1,35 @@
-  /* Garante que o conteúdo da resposta comece oculto e tenha transição suave */
-  .conteudo-item-faq .resposta {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-  
-  /* Quando o item estiver aberto via JavaScript */
-  .conteudo-item-faq.is-open .resposta {
-    max-height: 200px; 
-    padding-top: 12px; 
-  }
-  
-  /* Deixa o cursor com formato de clique no header do acordeão */
-  .conteudo-item-faq {
-    cursor: pointer;
-  }
-  
-  /* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
-  .conteudo-item-faq .minus img:nth-child(1) {
-    display: block;
-  }
-  .conteudo-item-faq .minus img:nth-child(2) {
-    display: none;
-  }
-  
-  /* Quando aberto, inverte: esconde o mais e mostra o menos */
-  .conteudo-item-faq.is-open .minus img:nth-child(1) {
-    display: none;
-  }
-  .conteudo-item-faq.is-open .minus img:nth-child(2) {
-    display: block;
-  }
+/* Deixa o cursor com formato de clique no item do acordeão */
+.item-faq {
+  cursor: pointer;
+}
+
+/* Garante que o conteúdo da resposta comece oculto e tenha transição suave */
+.item-faq .resposta {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Quando o item estiver aberto via JavaScript */
+.item-faq.is-open .resposta {
+  max-height: 200px; 
+  padding-top: 12px; 
+}
+
+/* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
+.item-faq .botoes-faq img:nth-child(1) {
+  display: block;
+}
+.item-faq .botoes-faq img:nth-child(2) {
+  display: none;
+}
+
+/* Quando aberto, inverte: esconde o mais e mostra o menos */
+.item-faq.is-open .botoes-faq img:nth-child(1) {
+  display: none;
+}
+.item-faq.is-open .botoes-faq img:nth-child(2) {
+  display: block;
+}
