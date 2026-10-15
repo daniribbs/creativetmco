@@ -1,35 +1,41 @@
-/* Deixa o cursor com formato de clique no item do acordeão */
 .item-faq {
   cursor: pointer;
 }
 
-/* Garante que o conteúdo da resposta comece oculto e tenha transição suave */
 .item-faq .resposta {
+  display: block !important;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  opacity: 0;
+  transform: translateY(8px);
   padding-top: 0;
   padding-bottom: 0;
+  transition:
+    max-height 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    padding 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* Quando o item estiver aberto via JavaScript */
 .item-faq.is-open .resposta {
-  max-height: 200px; 
-  padding-top: 12px; 
+  max-height: var(--state-h, 240px);
+  opacity: 1;
+  transform: translateY(0);
+  padding-top: 12px;
 }
 
-/* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
-.item-faq .botoes-faq img:nth-child(1) {
+.item-faq .botoes-faq img[src*="plus"] {
   display: block;
 }
-.item-faq .botoes-faq img:nth-child(2) {
+
+.item-faq .botoes-faq img[src*="minus"] {
   display: none;
 }
 
-/* Quando aberto, inverte: esconde o mais e mostra o menos */
-.item-faq.is-open .botoes-faq img:nth-child(1) {
+.item-faq.is-open .botoes-faq img[src*="plus"] {
   display: none;
 }
-.item-faq.is-open .botoes-faq img:nth-child(2) {
+
+.item-faq.is-open .botoes-faq img[src*="minus"] {
   display: block;
 }
