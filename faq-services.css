@@ -1,5 +1,5 @@
   /* Garante que o conteúdo da resposta comece oculto e tenha transição suave */
-  .item-faq .resposta {
+  .conteudo-item-faq .resposta {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease, padding 0.3s ease;
@@ -8,28 +8,28 @@
   }
   
   /* Quando o item estiver aberto via JavaScript */
-  .item-faq.is-open .resposta {
+  .conteudo-item-faq.is-open .resposta {
     max-height: 200px; 
     padding-top: 12px; 
   }
   
   /* Deixa o cursor com formato de clique no header do acordeão */
-  .item-faq {
+  .conteudo-item-faq {
     cursor: pointer;
   }
   
   /* Por padrão, mostra o primeiro ícone (mais) e esconde o segundo (menos) */
-  .item-faq .minus-2 img:nth-child(1) {
+  .conteudo-item-faq .minus-2 img:nth-child(1) {
     display: block;
   }
-  .item-faq .minus-2 img:nth-child(2) {
+  .conteudo-item-faq .minus-2 img:nth-child(2) {
     display: none;
   }
   
   /* Quando aberto, inverte: esconde o mais e mostra o menos */
-  .item-faq.is-open .minus-2 img:nth-child(1) {
+  .conteudo-item-faq.is-open .minus-2 img:nth-child(1) {
     display: none;
   }
-  .item-faq.is-open .minus-2 img:nth-child(2) {
+  .conteudo-item-faq.is-open .minus-2 img:nth-child(2) {
     display: block;
   }

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const accordions = document.querySelectorAll(".item-faq");
+    const items = document.querySelectorAll(".conteudo-item-faq");
   
     items.forEach((item) => {
       item.addEventListener("click", function () {
