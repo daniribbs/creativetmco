@@ -1,0 +1,20 @@
+.container-imagem {
+    height: 100%;
+    overflow: hidden;
+    margin-top: 0;
+  }
+
+  .aura-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 35%;
+    background: linear-gradient(
+      to top,
+      #20201F 0%,
+      rgba(32, 32, 31, 0) 100%
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
