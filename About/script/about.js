@@ -426,14 +426,13 @@
   
     function buildDots() {
   
-      /* Dots não aparecem no mobile */
-      if (!dotsWrap || isMobile()) {
-        return;
-      }
-  
-      dotsWrap.innerHTML = "";
-  
-      dots = [];
+      function buildDots() {
+        if (!dotsWrap) {
+          return;
+        }
+      
+        dotsWrap.innerHTML = "";
+        dots = [];
   
       for (let i = 0; i < total; i++) {
   
@@ -471,10 +470,6 @@
   
     /* Reinicia a animação do indicador ativo */
     function restartDotProgress() {
-  
-      if (isMobile()) {
-        return;
-      }
   
       if (!dots.length) {
         return;
