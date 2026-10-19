@@ -130,7 +130,7 @@
     overflow: hidden;
     object-fit: cover;
     display: block;
-    pointer-events: none;
+   /* pointer-events: none; */
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-right: var(--gallery-gap) !important; /* Espaçamento idêntico para todos */
