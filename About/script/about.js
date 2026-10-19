@@ -220,9 +220,11 @@
  
     function getStep() {
       const any = slides[0];
-      const w = any.getBoundingClientRect().width || 625;
-      const mr = parseFloat(getComputedStyle(any).marginRight) || 0;
-      return w + mr;
+      if (!any) return 625; 
+      const rect = any.getBoundingClientRect();
+      const w = rect.width || any.offsetWidth || 625; 
+      const mr = parseFloat(getComputedStyle(any).marginRight) || 32; 
+      return Math.max(1, w + mr);
     }
  
     function recalcLimits() {
