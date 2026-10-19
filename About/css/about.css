@@ -209,6 +209,10 @@
     .gallery-case_dots {
       display: none !important;
     }
+
+  .gallery-case_ui {
+    justify-content: flex-end !important;
+  }
   }
 
   /* ============================================================
