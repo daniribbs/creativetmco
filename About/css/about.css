@@ -212,7 +212,7 @@
 
   .gallery-case_ui {
     justify-content: flex-end !important;
-    margin-right: 16px !important;
+    padding: 16px !important;
   }
   }
 
