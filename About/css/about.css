@@ -1,7 +1,6 @@
 /* ============================================================
    1. ACCORDION — PROCESSO
    ============================================================ */
-
    .accordion-item-processo .accordion-content {
     display: none !important;
   }
@@ -69,7 +68,6 @@
 /* ============================================================
    2. GALERIA / CARROSSEL
    ============================================================ */
-
    :root {
     --grid-width: 1216px;
     --gallery-gap: 32px;
@@ -138,8 +136,6 @@
     margin-right: var(--gallery-gap) !important; /* Espaçamento idêntico para todos */
   }
   
-  /* Apaga a regra de zerar o último filho para não quebrar a simetria dos clones */
-  
   /* ============================================================
      CONTROLES DA GALERIA
      ============================================================ */
@@ -198,54 +194,23 @@
   /* ============================================================
      GALERIA — TABLET E MOBILE
      ============================================================ */
-  
-     @media (max-width: 991px) {
-      :root {
-        --gallery-gap: 16px;
-        --dot-w: 64px;
-        --dot-h: 6px;
-      }
-    
-      .gallery-case_dots {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-    
-      .gallery-case_ui {
-        margin-top: 20px;
-      }
+
+  @media (max-width: 991px) {
+    :root {
+      --gallery-gap: 16px;
+      --dot-w: 88px;
+      --grid-width: calc(100vw - 32px);
+      --gallery-size: min(
+        var(--gallery-max),
+        var(--grid-width)
+      );
     }
 
-    /* ============================================================
-   GALERIA — ESTENDER ATÉ A BORDA DIREITA
-   ============================================================ */
-
-.gallery-case {
-  width: 100%;
-  max-width: none !important;
-  overflow: hidden;
-}
-
-.gallery-case-wrap {
-  width: max-content !important;
-  max-width: none !important;
-}
-
-/* Evita que o contêiner limite a área visível da galeria */
-.gallery-case-wrap > .gallery-case_card,
-.gallery-case-wrap > img {
-  flex-shrink: 0 !important;
-}
-
-/* Mobile */
-@media (max-width: 991px) {
-  .gallery-case {
-    width: 100vw !important;
-    max-width: none !important;
+    .gallery-case_dots {
+      display: none !important;
+    }
   }
-}
-  
+
   /* ============================================================
      3. LOGO — FAIXA 
      ============================================================ */

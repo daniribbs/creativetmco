@@ -1,9 +1,7 @@
 /* ============================================================
    1. ACCORDION — PROCESSO (COM IMAGEM POR ITEM)
    ============================================================ */
-
    (function () {
-
     var ITEM_SELECTOR = ".accordion-item-processo";
     var IMAGE_SELECTOR = ".processo-image";
   
@@ -71,7 +69,6 @@
       initAccordion();
   
     }
-
     document.addEventListener("click", function (event) {
   
       /* Não interfere em links ou botões */
@@ -113,9 +110,7 @@
 /* ============================================================
    2. GALERIA / CARROSSEL (INFINITO)
    ============================================================ */
-
    document.addEventListener("DOMContentLoaded", function () {
-
     /* ----------------------------------------------------------
        ELEMENTOS PRINCIPAIS
        ---------------------------------------------------------- */
@@ -423,18 +418,20 @@
     /* ==========================================================
        DOTS / INDICADORES (um por slide original)
        ========================================================== */
-  
+
     function buildDots() {
-  
-      function buildDots() {
-        if (!dotsWrap) {
-          return;
-        }
-      
-        dotsWrap.innerHTML = "";
-        dots = [];
-  
+
+      /* Dots não aparecem no mobile */
+      if (!dotsWrap || isMobile()) {
+        return;
+      }
+
+      dotsWrap.innerHTML = "";
+
+      dots = [];
+
       for (let i = 0; i < total; i++) {
+
   
         const dot = document.createElement("div");
   
@@ -470,11 +467,15 @@
   
     /* Reinicia a animação do indicador ativo */
     function restartDotProgress() {
-  
+
+      if (isMobile()) {
+        return;
+      }
+
       if (!dots.length) {
         return;
       }
-  
+
       dots.forEach(function (dot) {
         dot.classList.remove("is-active");
       });
