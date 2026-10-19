@@ -2,253 +2,270 @@
    1. ACCORDION — PROCESSO
    ============================================================ */
 
-   .accordion-item-processo .accordion-content { display: none !important; }
-   .accordion-item-processo.is-open .accordion-content { display: block !important; }
-   .accordion-item-processo .accordion-expand { display: block !important; }
-   .accordion-item-processo .accordion-collapse { display: none !important; }
-   .accordion-item-processo.is-open .accordion-expand { display: none !important; }
-   .accordion-item-processo.is-open .accordion-collapse { display: block !important; }
-   
-   .accordion-item-processo,
-   .accordion-title,
-   .accordion-expand,
-   .accordion-collapse { cursor: pointer; }
-   
-   .processo-images { display: grid; }
-   
-   .processo-image {
-     grid-area: 1 / 1;
-     width: 100%;
-     height: 100%;
-     object-fit: cover;
-     opacity: 0;
-     transform: scale(1.03);
-     pointer-events: none;
-     transition: opacity 700ms cubic-bezier(.22, 1, .36, 1),
-                 transform 900ms cubic-bezier(.22, 1, .36, 1);
-   }
-   
-   .processo-image.is-active {
-     opacity: 1;
-     transform: scale(1);
-     pointer-events: auto;
-   }
-   
-   @media (prefers-reduced-motion: reduce) {
-     .processo-image { transition: none; transform: none; }
-   }
-   
-   /* ============================================================
-      2. GALERIA / CARROSSEL INFINITO
-      Importante: .gallery-case deve ser o viewport que recorta
-      as imagens; .gallery-case-wrap deve conter os slides diretos.
-      ============================================================ */
-   
+   .accordion-item-processo .accordion-content {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-content {
+    display: block !important;
+  }
+  
+  .accordion-item-processo .accordion-expand {
+    display: block !important;
+  }
+  
+  .accordion-item-processo .accordion-collapse {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-expand {
+    display: none !important;
+  }
+  
+  .accordion-item-processo.is-open .accordion-collapse {
+    display: block !important;
+  }
+  
+  .accordion-item-processo,
+  .accordion-title,
+  .accordion-expand,
+  .accordion-collapse {
+    cursor: pointer;
+  }
+  
+  .processo-images {
+    display: grid;
+  }
+  
+  .processo-image {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  
+    opacity: 0;
+    transform: scale(1.03);
+    pointer-events: none;
+  
+    transition:
+      opacity 700ms cubic-bezier(.22, 1, .36, 1),
+      transform 900ms cubic-bezier(.22, 1, .36, 1);
+  }
+  
+  .processo-image.is-active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .processo-image {
+      transition: none;
+      transform: none;
+    }
+  }
+  
+  
+/* ============================================================
+   2. GALERIA / CARROSSEL
+   ============================================================ */
+
    :root {
-     --gallery-gap: 32px;
-     --gallery-max: 1112px;
-     --gallery-radius: 24px;
-     --gallery-progress-ms: 6500ms;
-     --gallery-dot-width: 140px;
-     --gallery-dot-height: 8px;
-     --gallery-dot-bg: #322f2e;
-     --gallery-dot-fill: #f2e205;
-     --gallery-slide-ms: 800ms;
-     --gallery-slide-ease: cubic-bezier(.45, 0, .15, 1);
-     --gallery-slide-width: min(72vw, var(--gallery-max));
-   }
-   
-   .gallery-case {
-     position: relative !important;
-     display: block !important;
-     width: 100vw !important;
-     max-width: none !important;
-     margin-left: 0 !important;
-     margin-right: 0 !important;
-     padding: 0 !important;
-     overflow: hidden !important;
-     box-sizing: border-box !important;
-   }
-   
-   .gallery-case-wrap {
-     position: relative;
-     display: flex !important;
-     flex-flow: row nowrap !important;
-     justify-content: flex-start !important;
-     align-items: stretch !important;
-     gap: 0 !important;
-     width: max-content !important;
-     max-width: none !important;
-     margin: 0 !important;
-     box-sizing: border-box !important;
-     transform: translate3d(0, 0, 0);
-     transition: transform var(--gallery-slide-ms) var(--gallery-slide-ease);
-     will-change: transform;
-     touch-action: pan-y;
-     cursor: grab;
-   }
-   
-   .gallery-case-wrap.is-dragging {
-     cursor: grabbing;
-     transition: none !important;
-   }
-   
-   .gallery-case-wrap,
-   .gallery-case-wrap * {
-     -webkit-user-select: none;
-     user-select: none;
-   }
-   
-   .gallery-case_card,
-   .gallery-case-wrap > img {
-     display: block !important;
-     position: relative;
-     float: none !important;
-     flex: 0 0 var(--gallery-slide-width) !important;
-     width: var(--gallery-slide-width) !important;
-     min-width: 0 !important;
-     max-width: none !important;
-     height: auto !important;
-     aspect-ratio: 1112 / 625 !important;
-     box-sizing: border-box !important;
-     object-fit: cover;
-     overflow: hidden;
-     border-radius: var(--gallery-radius);
-     margin: 0 var(--gallery-gap) 0 0 !important;
-     padding: 0 !important;
-     pointer-events: none;
-   }
-   
-   /* Controles ficam na largura do conteúdo; setas não são cortadas */
-   .gallery-case_ui {
-     display: flex !important;
-     align-items: center !important;
-     justify-content: space-between !important;
-     gap: 20px;
-     width: 100%;
-     box-sizing: border-box;
-     margin-top: 32px;
-   }
-   
-   .gallery-case_dots {
-     display: flex !important;
-     flex: 1 1 auto;
-     align-items: center;
-     gap: 12px;
-     min-width: 0;
-     overflow: hidden;
-   }
-   
-   .gallery-dot {
-     position: relative;
-     display: block;
-     flex: 0 0 var(--gallery-dot-width);
-     width: var(--gallery-dot-width);
-     height: var(--gallery-dot-height);
-     padding: 0;
-     border: 0;
-     border-radius: 999px;
-     background: var(--gallery-dot-bg);
-     overflow: hidden;
-     cursor: pointer;
-     -webkit-tap-highlight-color: transparent;
-   }
-   
-   .gallery-dot-fill {
-     position: absolute;
-     inset: 0;
-     background: var(--gallery-dot-fill);
-     transform: translateX(-101%);
-   }
-   
-   .gallery-dot.is-active .gallery-dot-fill {
-     animation: galleryDotProgress var(--gallery-progress-ms) linear forwards;
-   }
-   
-   @keyframes galleryDotProgress {
-     from { transform: translateX(-101%); }
-     to { transform: translateX(0); }
-   }
-   
-   /* Suporta setas feitas com div, link ou botão no construtor */
-   .arrow-slider,
-   .arrow-slider-2 {
-     cursor: pointer !important;
-     user-select: none;
-     -webkit-tap-highlight-color: transparent;
-     touch-action: manipulation;
-   }
-   
-   .arrow-slider:focus-visible,
-   .arrow-slider-2:focus-visible,
-   .gallery-dot:focus-visible {
-     outline: 2px solid #f2e205;
-     outline-offset: 4px;
-   }
-   
-   /* Tablet e mobile */
-   @media (max-width: 991px) {
-     :root {
-       --gallery-gap: 16px;
-       --gallery-dot-width: clamp(24px, 10vw, 64px);
-       --gallery-dot-height: 6px;
-       --gallery-slide-width: min(82vw, var(--gallery-max));
-       --gallery-radius: 20px;
-     }
-   
-     .gallery-case {
-       width: 100vw !important;
-       max-width: none !important;
-       margin-left: calc(50% - 50vw) !important;
-       margin-right: 0 !important;
-     }
-   
-     .gallery-case_ui {
-       margin-top: 20px;
-       gap: 12px;
-     }
-   
-     .gallery-case_dots {
-       display: flex !important;
-       flex: 1 1 auto;
-       gap: 6px;
-       overflow: hidden;
-     }
-   
-     .gallery-dot {
-       flex: 0 1 var(--gallery-dot-width);
-       min-width: 10px;
-     }
-   
-     .arrow-slider,
-     .arrow-slider-2 {
-       flex-shrink: 0;
-     }
-   }
-   
-   @media (max-width: 480px) {
-     :root {
-       --gallery-slide-width: 86vw;
-       --gallery-gap: 12px;
-     }
-   
-     .gallery-case_ui { gap: 10px; }
-   }
-   
-   /* ============================================================
-      3. LOGO — FAIXA
-      ============================================================ */
-   
-   .logo-wrap:before {
-     content: '';
-     display: block;
-     position: absolute;
-     z-index: 999 !important;
-     width: 100%;
-     height: 65px;
-     margin-top: 0;
-     background: linear-gradient(90deg, #21201a 5%, transparent 50%, #21201a 100%);
-   }
-   
-   .logo-wrap { overflow: hidden; }
-   
+    --grid-width: 1216px;
+    --gallery-gap: 32px;
+    --gallery-max: 1112px;
+    --radius: 24px;
+    --progress-ms: 6500ms;
+    --dot-w: 140px;
+    --dot-h: 8px;
+    --dot-bg: #322f2e;
+    --dot-fill: #f2e205;
+    --gallery-size: min(
+      var(--gallery-max),
+      calc(var(--grid-width) * 0.72)
+    );
+    --slide-ms: 900ms;
+    --slide-ease: cubic-bezier(.45, 0, .15, 1);
+  }
+  
+  .gallery-case {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+  
+  .gallery-case-wrap {
+    box-sizing: border-box;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--slide-ms) var(--slide-ease);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    justify-content: flex-start !important;
+    align-items: stretch;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  
+  .gallery-case-wrap.is-dragging {
+    cursor: grabbing;
+  }
+  
+  .gallery-case-wrap,
+  .gallery-case-wrap * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Todos os slides (incluindo clones) mantêm margem direita constante */
+  .gallery-case_card,
+  .gallery-case-wrap > img {
+    float: none !important;
+    flex: 0 0 auto !important;
+    width: var(--gallery-size) !important;
+    height: auto !important;
+    aspect-ratio: 1112 / 625 !important;
+    border-radius: var(--radius);
+    overflow: hidden;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-right: var(--gallery-gap) !important; /* Espaçamento idêntico para todos */
+  }
+  
+  /* Apaga a regra de zerar o último filho para não quebrar a simetria dos clones */
+  
+  /* ============================================================
+     CONTROLES DA GALERIA
+     ============================================================ */
+  
+  .gallery-case_ui {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  
+  .gallery-case_dots {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+  }
+  
+  .gallery-dot {
+    width: var(--dot-w);
+    height: var(--dot-h);
+    background: var(--dot-bg);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  
+  .gallery-dot-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--dot-fill);
+    transform: translateX(-100%);
+  }
+  
+  .gallery-dot.is-active .gallery-dot-fill {
+    animation: dotProgress var(--progress-ms) linear forwards;
+  }
+  
+  @keyframes dotProgress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0%);
+    }
+  }
+  
+  .arrow-slider,
+  .arrow-slider-2 {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* ============================================================
+     GALERIA — TABLET E MOBILE
+     ============================================================ */
+  
+     @media (max-width: 991px) {
+      :root {
+        --gallery-gap: 16px;
+        --dot-w: 64px;
+        --dot-h: 6px;
+      }
+    
+      .gallery-case_dots {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    
+      .gallery-case_ui {
+        margin-top: 20px;
+      }
+    }
+
+    /* ============================================================
+   GALERIA — ESTENDER ATÉ A BORDA DIREITA
+   ============================================================ */
+
+.gallery-case {
+  width: 100%;
+  max-width: none !important;
+  overflow: hidden;
+}
+
+.gallery-case-wrap {
+  width: max-content !important;
+  max-width: none !important;
+}
+
+/* Evita que o contêiner limite a área visível da galeria */
+.gallery-case-wrap > .gallery-case_card,
+.gallery-case-wrap > img {
+  flex-shrink: 0 !important;
+}
+
+/* Mobile */
+@media (max-width: 991px) {
+  .gallery-case {
+    width: 100vw !important;
+    max-width: none !important;
+  }
+}
+  
+  /* ============================================================
+     3. LOGO — FAIXA 
+     ============================================================ */
+  
+  .logo-wrap:before {
+    background: linear-gradient(
+      90deg,
+      #21201a 5%,
+      transparent 50%,
+      #21201a 100%
+    );
+    display: block;
+    content: '';
+    z-index: 999 !important;
+    height: 65px;
+    margin-top: 0;
+    position: absolute;
+    width: 100%;
+  }
+  
+  .logo-wrap {
+    overflow: hidden;
+  }
