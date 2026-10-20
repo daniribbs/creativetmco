@@ -1,0 +1,59 @@
+/* ============================================================
+   4. SLIDER DE DEPOIMENTOS (1 card por vez)
+   ============================================================ */
+
+/* Wrapper do Collection List */
+.w-dyn-list:has(> .w-dyn-items > .testimonial-card) {
+  overflow: hidden;
+  width: 100%;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+/* Collection List (trilho) */
+.w-dyn-items:has(> .testimonial-card) {
+  position: relative; /* necessário para o offsetLeft do JS */
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: var(--gallery-gap, 32px);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--slide-ms, 900ms) var(--slide-ease, cubic-bezier(.45, 0, .15, 1));
+}
+
+.w-dyn-items:has(> .testimonial-card).is-dragging {
+  cursor: grabbing;
+}
+
+.w-dyn-items:has(> .testimonial-card),
+.w-dyn-items:has(> .testimonial-card) * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.w-dyn-items:has(> .testimonial-card) img {
+  -webkit-user-drag: none;
+}
+
+/* Remove o clearfix do w-row, que viraria itens fantasmas no flex */
+.w-dyn-items:has(> .testimonial-card)::before,
+.w-dyn-items:has(> .testimonial-card)::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Cada card ocupa 100% = 1 por vez (anula o w-col-6) */
+.w-dyn-items > .testimonial-card {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  float: none !important;
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w-dyn-items:has(> .testimonial-card) {
+    transition-duration: 1ms;
+  }
+}

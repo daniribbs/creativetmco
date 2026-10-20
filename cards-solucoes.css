@@ -1,0 +1,25 @@
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.45s ease, opacity 0.3s ease;
+}
+
+.reveal-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.item-servico:hover .reveal,
+.item-servico:focus-within .reveal {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Touch: sem hover, mostra tudo */
+@media (hover: none) {
+  .reveal {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
