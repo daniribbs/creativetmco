@@ -18,3 +18,19 @@
     pointer-events: none;
     z-index: 10;
   }
+
+@media (max-width: 1024px) {
+  .container-imagem {
+    position: relative;
+    width: 100%;
+    height: 100vh; 
+    max-height: 100%;
+    overflow: hidden !important;
+  }
+
+  /* Garante que os elementos internos respeitem os limites */
+  .container-imagem .carrossel-vertical-1,
+  .container-imagem .carrossel-vertical-2 {
+    will-change: transform;
+  }
+}

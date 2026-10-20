@@ -75,36 +75,40 @@
       }
   
       build();
-  
+
       var last = performance.now();
-  
+
       function tick(now) {
         var dt = (now - last) / 1000;
         last = now;
-  
+
         data.forEach(function (d) {
           if (d.dist <= 0) return;
-  
+
           d.pos = (d.pos + SPEED * dt) % d.dist;
           var y = d.dir === -1 ? -d.pos : d.pos - d.dist;
-  
+
           d.col.style.transform = 'translate3d(0,' + y + 'px,0)';
         });
-  
+
         requestAnimationFrame(tick);
       }
-  
+
       requestAnimationFrame(tick);
-  
+
       window.addEventListener('load', build);
-  
+
       var resizeTimer;
       window.addEventListener('resize', function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(build, 200);
       });
+
+      window.addEventListener('orientationchange', function () {
+        setTimeout(build, 300);
+      });
     }
-  
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
