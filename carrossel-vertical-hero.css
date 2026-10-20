@@ -1,24 +1,26 @@
+/* Estilo base (Desktop / Padrão) */
 .container-imagem {
-    height: 100%;
-    overflow: hidden;
-    margin-top: 0;
-  }
+  height: 100%;
+  overflow: hidden;
+  margin-top: 0;
+}
 
-  .aura-fade {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 35%;
-    background: linear-gradient(
-      to top,
-      #20201F 0%,
-      rgba(32, 32, 31, 0) 100%
-    );
-    pointer-events: none;
-    z-index: 10;
-  }
+.aura-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 35%;
+  background: linear-gradient(
+    to top,
+    #20201F 0%,
+    rgba(32, 32, 31, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
 
+/* Ajustes exclusivos para mobile e tablets (até 1024px) */
 @media (max-width: 1024px) {
   .container-imagem {
     position: relative;
@@ -32,5 +34,19 @@
   .container-imagem .carrossel-vertical-1,
   .container-imagem .carrossel-vertical-2 {
     will-change: transform;
+  }
+
+  /* Degradê nas duas extremidades (topo e base) apenas no mobile */
+  .aura-fade {
+    top: 0;
+    bottom: 0;
+    height: 100% !important;
+    background: linear-gradient(
+      to bottom,
+      #20201F 0%,
+      rgba(32, 32, 31, 0) 15%,
+      rgba(32, 32, 31, 0) 85%,
+      #20201F 100%
+    );
   }
 }
