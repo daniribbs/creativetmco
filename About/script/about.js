@@ -5,28 +5,20 @@
    (function () {
     var ITEM_SELECTOR = ".accordion-item-processo";
     var IMAGE_SELECTOR = ".processo-image";
-  
     var OPEN_CLASS = "is-open";
     var ACTIVE_CLASS = "is-active";
   
     function getItems() {
-      return Array.prototype.slice.call(
-        document.querySelectorAll(ITEM_SELECTOR)
-      );
+      return Array.prototype.slice.call(document.querySelectorAll(ITEM_SELECTOR));
     }
   
     function getImages() {
-      return Array.prototype.slice.call(
-        document.querySelectorAll(IMAGE_SELECTOR)
-      );
+      return Array.prototype.slice.call(document.querySelectorAll(IMAGE_SELECTOR));
     }
   
     function showImage(i) {
       var images = getImages();
-  
-      if (!images[i]) {
-        return;
-      }
+      if (!images[i]) return;
   
       images.forEach(function (img, n) {
         img.classList.toggle(ACTIVE_CLASS, n === i);
@@ -37,7 +29,6 @@
       getItems().forEach(function (item) {
         item.classList.remove(OPEN_CLASS);
       });
-  
       showImage(0);
     }
   
@@ -48,36 +39,28 @@
     }
   
     document.addEventListener("click", function (event) {
-      if (event.target.closest("a, button")) {
-        return;
-      }
+      if (event.target.closest("a, button")) return;
   
       var item = event.target.closest(ITEM_SELECTOR);
-  
-      if (!item) {
-        return;
-      }
+      if (!item) return;
   
       var items = getItems();
       var willOpen = !item.classList.contains(OPEN_CLASS);
   
       items.forEach(function (other) {
-        if (other !== item) {
-          other.classList.remove(OPEN_CLASS);
-        }
+        if (other !== item) other.classList.remove(OPEN_CLASS);
       });
   
       item.classList.toggle(OPEN_CLASS, willOpen);
   
-      if (willOpen) {
-        showImage(items.indexOf(item));
-      }
+      if (willOpen) showImage(items.indexOf(item));
     });
   })();
   
   
   /* ============================================================
      2. GALERIA / CARROSSEL INFINITO
+     (o fade da borda direita é feito 100% em CSS)
      ============================================================ */
   
   document.addEventListener("DOMContentLoaded", function () {
@@ -85,64 +68,27 @@
     const wrap = document.querySelector(".gallery-case-wrap");
     const dotsWrap = document.querySelector(".gallery-case_dots");
   
-    const btnPrev = document.querySelector(
-      ".arrow-slider.left, .arrow-slider-2.left"
-    );
-    const btnNext = document.querySelector(
-      ".arrow-slider.right, .arrow-slider-2.right"
-    );
+    const btnPrev = document.querySelector(".arrow-slider.left, .arrow-slider-2.left");
+    const btnNext = document.querySelector(".arrow-slider.right, .arrow-slider-2.right");
   
-    if (!section || !wrap) {
-      return;
-    }
+    if (!section || !wrap) return;
   
     const track = wrap;
   
-    // As imagens originais do carrossel
+    // Imagens originais
     let slides = Array.from(track.querySelectorAll(":scope > img"));
-  
-    if (slides.length < 2) {
-      return;
-    }
+    if (slides.length < 2) return;
   
     const total = slides.length;
     const SETS = 3;
   
-    // Cria dois conjuntos de clones para permitir o loop infinito
+    // Clones para o loop infinito
     for (let c = 1; c < SETS; c++) {
       slides.forEach(function (slide) {
         const clone = slide.cloneNode(true);
         clone.setAttribute("aria-hidden", "true");
         clone.dataset.clone = "true";
         track.appendChild(clone);
-      });
-    }
-  
-    /*
-     * Cria uma camada de gradiente sobre cada imagem que tenha
-     * a classe "has-gradient". No Webflow, aplique essa classe
-     * somente à segunda imagem original.
-     *
-     * A classe também é copiada automaticamente para os clones.
-     */
-    function updateGradientOverlays() {
-      track
-        .querySelectorAll(".gallery-right-gradient")
-        .forEach(function (overlay) {
-          overlay.remove();
-        });
-  
-      track.querySelectorAll("img.has-gradient").forEach(function (img) {
-        const overlay = document.createElement("div");
-        overlay.className = "gallery-right-gradient";
-  
-        // Posição da imagem no layout do track, sem usar o transform.
-        overlay.style.left = img.offsetLeft + "px";
-        overlay.style.top = img.offsetTop + "px";
-        overlay.style.width = img.offsetWidth + "px";
-        overlay.style.height = img.offsetHeight + "px";
-  
-        track.appendChild(overlay);
       });
     }
   
@@ -161,30 +107,24 @@
     let currentTranslate = 0;
     let lock = null;
   
+    let isInView = false;
+    let isReady = false;
+  
     const isMobile = function () {
       return window.matchMedia("(max-width: 991px)").matches;
     };
-  
-    let isInView = false;
-    let isReady = false;
   
     function absMaxIndex() {
       return total * SETS - slidesPerView;
     }
   
     function stopAutoplay() {
-      if (timer) {
-        clearTimeout(timer);
-      }
-  
+      if (timer) clearTimeout(timer);
       timer = null;
     }
   
     function ensureAutoplay() {
-      if (!isReady || !isInView) {
-        return;
-      }
-  
+      if (!isReady || !isInView) return;
       restartAutoplay();
     }
   
@@ -199,11 +139,7 @@
       const left = Math.max(0, rect.left);
   
       gridWidth = Math.max(0, rect.width);
-  
-      document.documentElement.style.setProperty(
-        "--grid-width",
-        gridWidth + "px"
-      );
+      document.documentElement.style.setProperty("--grid-width", gridWidth + "px");
   
       section.style.position = "relative";
       section.style.left = -rect.left + "px";
@@ -216,9 +152,7 @@
     function waitImages() {
       return Promise.all(
         slides.map(function (img) {
-          if (img.complete) {
-            return Promise.resolve();
-          }
+          if (img.complete) return Promise.resolve();
   
           return new Promise(function (resolve) {
             img.addEventListener("load", resolve, { once: true });
@@ -230,23 +164,18 @@
   
     function getStep() {
       const any = slides[0];
-  
-      if (!any) {
-        return 625;
-      }
+      if (!any) return 625;
   
       const rect = any.getBoundingClientRect();
       const width = rect.width || any.offsetWidth || 625;
-      const marginRight =
-        parseFloat(getComputedStyle(any).marginRight) || 32;
+      const marginRight = parseFloat(getComputedStyle(any).marginRight) || 32;
   
       return Math.max(1, width + marginRight);
     }
   
     function recalcLimits() {
       const any = slides[0];
-      const marginRight =
-        parseFloat(getComputedStyle(any).marginRight) || 0;
+      const marginRight = parseFloat(getComputedStyle(any).marginRight) || 0;
       const count = Math.floor((gridWidth + marginRight) / step);
   
       slidesPerView = Math.max(1, Math.min(total, count || 1));
@@ -255,8 +184,7 @@
     function setTransform(i, withTransition) {
       track.style.transition = withTransition ? "" : "none";
       currentTranslate = -i * step;
-      track.style.transform =
-        "translate3d(" + currentTranslate + "px, 0, 0)";
+      track.style.transform = "translate3d(" + currentTranslate + "px, 0, 0)";
   
       if (!withTransition) {
         track.getBoundingClientRect();
@@ -267,8 +195,7 @@
     function setTranslatePx(px, withTransition) {
       track.style.transition = withTransition ? "" : "none";
       currentTranslate = px;
-      track.style.transform =
-        "translate3d(" + currentTranslate + "px, 0, 0)";
+      track.style.transform = "translate3d(" + currentTranslate + "px, 0, 0)";
   
       if (!withTransition) {
         track.getBoundingClientRect();
@@ -278,39 +205,24 @@
   
     function getActualTranslate() {
       const transform = getComputedStyle(track).transform;
-  
-      if (!transform || transform === "none") {
-        return 0;
-      }
-  
+      if (!transform || transform === "none") return 0;
       return new DOMMatrixReadOnly(transform).m41;
     }
   
     function normalizeIndex() {
       if (index >= total) {
-        while (index >= total) {
-          index -= total;
-        }
-  
+        while (index >= total) index -= total;
         setTransform(index, false);
       }
     }
   
     track.addEventListener("transitionend", function (event) {
-      if (
-        event.target !== track ||
-        event.propertyName !== "transform"
-      ) {
-        return;
-      }
-  
+      if (event.target !== track || event.propertyName !== "transform") return;
       normalizeIndex();
     });
   
     function buildDots() {
-      if (!dotsWrap || isMobile()) {
-        return;
-      }
+      if (!dotsWrap || isMobile()) return;
   
       dotsWrap.innerHTML = "";
       dots = [];
@@ -343,32 +255,22 @@
     }
   
     function restartDotProgress() {
-      if (isMobile() || !dots.length) {
-        return;
-      }
+      if (isMobile() || !dots.length) return;
   
       dots.forEach(function (dot) {
         dot.classList.remove("is-active");
       });
   
       const active = dots[index % total];
-  
-      if (!active) {
-        return;
-      }
+      if (!active) return;
   
       void active.offsetWidth;
       active.classList.add("is-active");
     }
   
     function restartAutoplay() {
-      if (!isInView) {
-        return;
-      }
-  
-      if (timer) {
-        clearTimeout(timer);
-      }
+      if (!isInView) return;
+      if (timer) clearTimeout(timer);
   
       restartDotProgress();
       timer = setTimeout(function () {
@@ -425,9 +327,7 @@
     }
   
     [btnPrev, btnNext].forEach(function (btn) {
-      if (!btn) {
-        return;
-      }
+      if (!btn) return;
   
       btn.setAttribute("role", "button");
       btn.setAttribute("tabindex", "0");
@@ -436,41 +336,27 @@
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           isInView = true;
-  
-          if (btn === btnNext) {
-            next();
-          } else {
-            prev();
-          }
+          if (btn === btnNext) next();
+          else prev();
         }
       });
     });
   
     function clampIndexFromTranslate(px) {
       const raw = Math.round(Math.abs(px) / step);
-  
       return Math.max(0, Math.min(absMaxIndex(), raw));
     }
   
     function pointerXY(event) {
       if (event.touches && event.touches[0]) {
-        return {
-          x: event.touches[0].clientX,
-          y: event.touches[0].clientY
-        };
+        return { x: event.touches[0].clientX, y: event.touches[0].clientY };
       }
   
       if (event.changedTouches && event.changedTouches[0]) {
-        return {
-          x: event.changedTouches[0].clientX,
-          y: event.changedTouches[0].clientY
-        };
+        return { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
       }
   
-      return {
-        x: event.clientX,
-        y: event.clientY
-      };
+      return { x: event.clientX, y: event.clientY };
     }
   
     function onDown(event) {
@@ -478,11 +364,9 @@
   
       if (
         target &&
-        (
-          target.closest(".arrow-slider") ||
+        (target.closest(".arrow-slider") ||
           target.closest(".arrow-slider-2") ||
-          target.closest(".gallery-dot")
-        )
+          target.closest(".gallery-dot"))
       ) {
         return;
       }
@@ -507,9 +391,7 @@
     }
   
     function onMove(event) {
-      if (!isDown) {
-        return;
-      }
+      if (!isDown) return;
   
       const point = pointerXY(event);
       const dx = point.x - startX;
@@ -523,28 +405,18 @@
         }
       }
   
-      if (lock === "y") {
-        return;
-      }
-  
-      if (event.cancelable) {
-        event.preventDefault();
-      }
+      if (lock === "y") return;
+      if (event.cancelable) event.preventDefault();
   
       const minPx = -absMaxIndex() * step;
       const maxPx = 0;
-      const nextPx = Math.max(
-        minPx,
-        Math.min(maxPx, startTranslate + dx)
-      );
+      const nextPx = Math.max(minPx, Math.min(maxPx, startTranslate + dx));
   
       setTranslatePx(nextPx, false);
     }
   
     function onUp() {
-      if (!isDown) {
-        return;
-      }
+      if (!isDown) return;
   
       isDown = false;
       track.classList.remove("is-dragging");
@@ -574,9 +446,6 @@
       step = getStep();
       recalcLimits();
   
-      // Posiciona as camadas de gradiente depois de as imagens carregarem
-      updateGradientOverlays();
-  
       buildDots();
       setTransform(index, false);
       isReady = true;
@@ -591,11 +460,8 @@
               entry.isIntersecting &&
               entry.intersectionRatio >= 0.35;
   
-            if (isInView) {
-              restartAutoplay();
-            } else {
-              stopAutoplay();
-            }
+            if (isInView) restartAutoplay();
+            else stopAutoplay();
           },
           { threshold: [0, 0.35, 0.6, 1] }
         );
@@ -611,18 +477,11 @@
       applyFullBleedAligned();
   
       const newStep = getStep();
-  
-      if (Math.abs(newStep - step) > 0.5) {
-        step = newStep;
-      }
+      if (Math.abs(newStep - step) > 0.5) step = newStep;
   
       recalcLimits();
-      updateGradientOverlays();
   
-      if (dotsWrap) {
-        dotsWrap.innerHTML = "";
-      }
-  
+      if (dotsWrap) dotsWrap.innerHTML = "";
       dots = [];
       buildDots();
       normalizeIndex();
@@ -631,10 +490,7 @@
     });
   
     document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        stopAutoplay();
-      } else {
-        ensureAutoplay();
-      }
+      if (document.hidden) stopAutoplay();
+      else ensureAutoplay();
     });
   });
