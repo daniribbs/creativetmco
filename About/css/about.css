@@ -91,6 +91,24 @@
     width: 100%;
   }
   
+  /* Gradiente fixo apenas na lateral direita */
+  .gallery-case::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 18%;
+    max-width: 220px;
+    pointer-events: none;
+    z-index: 10;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #21201a 100%
+    );
+  }
+  
   .gallery-case-wrap {
     box-sizing: border-box;
     display: flex !important;
@@ -105,22 +123,6 @@
     align-items: stretch;
     touch-action: pan-y;
     cursor: grab;
-    position: relative; /* Necessário para posicionar o gradiente */
-  }
-  
-  /* Camada de gradiente aplicada no container da galeria */
-  .gallery-case-wrap::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none; /* Permite cliques e arraste por cima do gradiente */
-    z-index: 10;
-    background: linear-gradient(
-      90deg,
-      #21201a 5%,
-      transparent 50%,
-      #21201a 100%
-    );
   }
   
   .gallery-case-wrap.is-dragging {
@@ -228,4 +230,28 @@
       justify-content: flex-end !important;
       padding: 16px !important;
     }
+  }
+  
+  /* ============================================================
+     3. LOGO — FAIXA 
+     ============================================================ */
+   
+  .logo-wrap:before {
+    background: linear-gradient(
+      90deg,
+      #21201a 5%,
+      transparent 50%,
+      #21201a 100%
+    );
+    display: block;
+    content: '';
+    z-index: 999 !important;
+    height: 65px;
+    margin-top: 0;
+    position: absolute;
+    width: 100%;
+  }
+   
+  .logo-wrap {
+    overflow: hidden;
   }
