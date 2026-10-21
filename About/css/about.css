@@ -1,6 +1,7 @@
 /* ============================================================
    1. ACCORDION — PROCESSO
    ============================================================ */
+
    .accordion-item-processo .accordion-content {
     display: none !important;
   }
@@ -41,11 +42,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-  
     opacity: 0;
     transform: scale(1.03);
     pointer-events: none;
-  
     transition:
       opacity 700ms cubic-bezier(.22, 1, .36, 1),
       transform 900ms cubic-bezier(.22, 1, .36, 1);
@@ -65,10 +64,11 @@
   }
   
   
-/* ============================================================
-   2. GALERIA / CARROSSEL
-   ============================================================ */
-   :root {
+  /* ============================================================
+     2. GALERIA / CARROSSEL
+     ============================================================ */
+  
+  :root {
     --grid-width: 1216px;
     --gallery-gap: 32px;
     --gallery-max: 1112px;
@@ -97,6 +97,7 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 0 !important;
+    position: relative;
     will-change: transform;
     transform: translate3d(0, 0, 0);
     transition: transform var(--slide-ms) var(--slide-ease);
@@ -118,7 +119,7 @@
     user-select: none;
   }
   
-  /* Todos os slides (incluindo clones) mantêm margem direita constante */
+  /* Todos os slides, inclusive clones */
   .gallery-case_card,
   .gallery-case-wrap > img {
     float: none !important;
@@ -130,11 +131,24 @@
     overflow: hidden;
     object-fit: cover;
     display: block;
-   /* pointer-events: none; */
     padding-left: 0 !important;
     padding-right: 0 !important;
-    margin-right: var(--gallery-gap) !important; /* Espaçamento idêntico para todos */
+    margin-right: var(--gallery-gap) !important;
   }
+  
+  /* Camada do gradiente sobre a segunda imagem e seus clones */
+  .gallery-right-gradient {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: var(--radius);
+    background: linear-gradient(
+      to right,
+      rgba(33, 32, 26, 0) 55%,
+      #21201a 100%
+    );
+  }
+  
   
   /* ============================================================
      CONTROLES DA GALERIA
@@ -179,6 +193,7 @@
     from {
       transform: translateX(-100%);
     }
+  
     to {
       transform: translateX(0%);
     }
@@ -191,10 +206,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   
+  
   /* ============================================================
      GALERIA — TABLET E MOBILE
      ============================================================ */
-
+  
   @media (max-width: 991px) {
     :root {
       --gallery-gap: 16px;
@@ -205,41 +221,20 @@
         var(--grid-width)
       );
     }
-
+  
     .gallery-case_dots {
       display: none !important;
     }
-
-  .gallery-case_ui {
-    justify-content: flex-end !important;
-    padding: 16px !important;
-  }
-  }
-
-  .gallery-case-wrap {
-    position: relative;
+  
+    .gallery-case_ui {
+      justify-content: flex-end !important;
+      padding: 16px !important;
+    }
   }
   
-  .gallery-case-wrap > img.has-right-gradient {
-    /* A imagem continua visível sob a camada */
-  }
   
-  .gallery-right-gradient {
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      to right,
-      rgba(32, 32, 31, 0) 0%,
-      #20201F 100%
-    );
-    border-radius: var(--radius);
-  }
-
   /* ============================================================
-     3. LOGO — FAIXA 
+     3. LOGO — FAIXA
      ============================================================ */
   
   .logo-wrap:before {
