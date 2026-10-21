@@ -64,11 +64,10 @@
   }
   
   
-  /* ============================================================
-     2. GALERIA / CARROSSEL
-     ============================================================ */
-  
-  :root {
+/* ============================================================
+   2. GALERIA / CARROSSEL
+   ============================================================ */
+   :root {
     --grid-width: 1216px;
     --gallery-gap: 32px;
     --gallery-max: 1112px;
@@ -84,11 +83,6 @@
     );
     --slide-ms: 900ms;
     --slide-ease: cubic-bezier(.45, 0, .15, 1);
-  
-    /* Efeito de fade na borda direita */
-    --fade-bg: #21201a;                      /* mesma cor do fundo da seção */
-    --fade-width: clamp(80px, 16vw, 320px);  /* largura da área com fade */
-    --fade-blur: 8px;                        /* intensidade do blur (0 desliga) */
   }
   
   .gallery-case {
@@ -97,48 +91,11 @@
     width: 100%;
   }
   
-  /* ---------- Fade da borda direita ---------- */
-  
-  /* Camada 1: blur progressivo (mais forte perto da borda) */
-  .gallery-case::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: var(--fade-width);
-    z-index: 2;
-    pointer-events: none;
-    -webkit-backdrop-filter: blur(var(--fade-blur));
-    backdrop-filter: blur(var(--fade-blur));
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 100%);
-    mask-image: linear-gradient(to right, transparent 0%, #000 100%);
-  }
-  
-  /* Camada 2: degradê para a cor do fundo */
-  .gallery-case::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: var(--fade-width);
-    z-index: 3;
-    pointer-events: none;
-    background: linear-gradient(
-      to right,
-      rgba(33, 32, 26, 0) 0%,
-      rgba(33, 32, 26, 0.55) 55%,
-      var(--fade-bg) 100%
-    );
-  }
-  
   .gallery-case-wrap {
     box-sizing: border-box;
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 0 !important;
-    position: relative;
     will-change: transform;
     transform: translate3d(0, 0, 0);
     transition: transform var(--slide-ms) var(--slide-ease);
@@ -148,6 +105,22 @@
     align-items: stretch;
     touch-action: pan-y;
     cursor: grab;
+    position: relative; /* Necessário para posicionar o gradiente */
+  }
+  
+  /* Camada de gradiente aplicada no container da galeria */
+  .gallery-case-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none; /* Permite cliques e arraste por cima do gradiente */
+    z-index: 10;
+    background: linear-gradient(
+      90deg,
+      #21201a 5%,
+      transparent 50%,
+      #21201a 100%
+    );
   }
   
   .gallery-case-wrap.is-dragging {
@@ -160,7 +133,7 @@
     user-select: none;
   }
   
-  /* Todos os slides, inclusive clones */
+  /* Todos os slides (incluindo clones) mantêm margem direita constante */
   .gallery-case_card,
   .gallery-case-wrap > img {
     float: none !important;
@@ -177,7 +150,6 @@
     margin-right: var(--gallery-gap) !important;
   }
   
-  
   /* ============================================================
      CONTROLES DA GALERIA
      ============================================================ */
@@ -187,8 +159,6 @@
     align-items: center;
     justify-content: space-between;
     margin-top: 32px;
-    position: relative;
-    z-index: 4; /* garante que setas/dots fiquem acima do fade */
   }
   
   .gallery-case_dots {
@@ -220,8 +190,12 @@
   }
   
   @keyframes dotProgress {
-    from { transform: translateX(-100%); }
-    to   { transform: translateX(0%); }
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0%);
+    }
   }
   
   .arrow-slider,
@@ -230,7 +204,6 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  
   
   /* ============================================================
      GALERIA — TABLET E MOBILE
@@ -245,8 +218,6 @@
         var(--gallery-max),
         var(--grid-width)
       );
-      --fade-width: 48px;
-      --fade-blur: 4px;
     }
   
     .gallery-case_dots {
@@ -257,29 +228,4 @@
       justify-content: flex-end !important;
       padding: 16px !important;
     }
-  }
-  
-  
-  /* ============================================================
-     3. LOGO — FAIXA
-     ============================================================ */
-  
-  .logo-wrap:before {
-    background: linear-gradient(
-      90deg,
-      #21201a 5%,
-      transparent 50%,
-      #21201a 100%
-    );
-    display: block;
-    content: '';
-    z-index: 999 !important;
-    height: 65px;
-    margin-top: 0;
-    position: absolute;
-    width: 100%;
-  }
-  
-  .logo-wrap {
-    overflow: hidden;
   }
