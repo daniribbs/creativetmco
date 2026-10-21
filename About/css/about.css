@@ -190,6 +190,28 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Posiciona o slide com position relative para o gradiente cobri-lo */
+.gallery-case_card.has-gradient,
+.gallery-case-wrap > img.has-gradient {
+  position: relative;
+}
+
+  /* Cria a camada de gradiente por cima da imagem */
+  .gallery-case-wrap > img.has-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      #21201a 0%,
+      transparent 50%,
+      #21201a 100%
+    );
+    pointer-events: none; /* Garante que os cliques passem através do gradiente */
+    border-radius: var(--radius);
+    z-index: 2;
+  }
   
   /* ============================================================
      GALERIA — TABLET E MOBILE

@@ -142,6 +142,15 @@
         track.appendChild(clone);
       });
     }
+
+    const allSlides = Array.from(track.querySelectorAll("img"));
+
+    // Adiciona a classe de gradiente na segunda foto de cada conjunto de 'total' slides
+    allSlides.forEach((img, i) => {
+      if (i % total === 1) {
+        img.classList.add("has-gradient");
+      }
+    });
  
     const PROGRESS_MS = 6500;
     let index = 0;
