@@ -142,16 +142,31 @@
         track.appendChild(clone);
       });
     }
-
-    const allSlides = Array.from(track.querySelectorAll("img"));
-
-    // Adiciona a classe de gradiente na segunda foto de cada conjunto de 'total' slides
-    allSlides.forEach((img, i) => {
-      if (i % total === 1) {
-        img.classList.add("has-gradient");
-      }
-    });
  
+    function addRightGradientToSecondImage() {
+      // Remove camadas anteriores para evitar duplicação
+      track.querySelectorAll(".gallery-right-gradient").forEach(el => el.remove());
+    
+      // A segunda foto original
+      const secondImage = track.querySelectorAll(":scope > img")[1];
+      if (!secondImage) return;
+    
+      secondImage.classList.add("has-right-gradient");
+    
+      const imageRect = secondImage.getBoundingClientRect();
+      const trackRect = track.getBoundingClientRect();
+    
+      const gradient = document.createElement("div");
+      gradient.className = "gallery-right-gradient";
+      gradient.style.left = `${imageRect.left - trackRect.left}px`;
+      gradient.style.width = `${imageRect.width}px`;
+      gradient.style.height = `${imageRect.height}px`;
+    
+      track.appendChild(gradient);
+    }
+    
+    addRightGradientToSecondImage();
+    window.addEventListener("resize", addRightGradientToSecondImage);
     const PROGRESS_MS = 6500;
     let index = 0;
     let step = 0;
