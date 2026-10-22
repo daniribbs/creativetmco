@@ -16,7 +16,6 @@
   transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Círculo do Ícone (Tempo alterado de 0.5s para 0.8s) */
 .botao-animado-amarelo .icon-circle {
   position: absolute;
   left: 4px;
@@ -35,7 +34,6 @@
               border-color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Seta Preta no Estado Normal (Tempo alterado de 0.4s para 0.6s) */
 .botao-animado-amarelo .ico-button_sm_yellow {
   width: 16px;
   height: 14px;
@@ -44,7 +42,6 @@
               color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Texto do Botão (Tempo alterado de 0.5s para 0.8s) */
 .botao-animado-amarelo .text-button {
   position: absolute;
   left: 70px; 
