@@ -1,7 +1,7 @@
 @media (min-width: 992px) {
     .container-jornada {
       position: sticky;
-      top: 100px;
+      top: 120px;
       align-self: flex-start;
     }
   }
