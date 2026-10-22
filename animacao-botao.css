@@ -2,8 +2,9 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 4px 28px 4px 58px; 
+  justify-content: center;
   height: 56px;
+  padding: 0 24px 0 70px; 
   border-radius: 28px;
   background-color: #F2E205;
   border: 1px solid #E5D842;
@@ -14,7 +15,6 @@
   transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Círculo do Ícone */
 .botao-animado-amarelo .icon-circle {
   position: absolute;
   left: 4px;
@@ -28,23 +28,20 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+  transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
               background-color 0.8s cubic-bezier(0.25, 1, 0.5, 1),
               border-color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Seta */
 .botao-animado-amarelo .ico-button_sm_yellow {
   width: 16px;
   height: 14px;
   color: #231F20;
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1),
-              color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Texto do Botão */
 .botao-animado-amarelo .text-button {
-  position: relative;
+  position: relative; 
   font-weight: 700;
   font-size: 14px;
   color: #231F20;
@@ -54,17 +51,16 @@
 }
 
 /* --- ESTADOS DE HOVER --- */
-
 .botao-animado-amarelo:hover .icon-circle {
-  transform: translateX(calc(100% - 46px)); 
+  left: calc(100% - 50px); 
   background-color: #20201F;
   border-color: #444440;
 }
 
 .botao-animado-amarelo:hover .ico-button_sm_yellow {
-  color: #FCFCFC; 
+  color: #FCFCFC;
 }
 
 .botao-animado-amarelo:hover .text-button {
-  transform: translateX(-16px);
+  transform: translateX(-46px); 
 }
