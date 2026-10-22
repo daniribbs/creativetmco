@@ -105,7 +105,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      #21201a 100%
+      #20201F 100%
     );
   }
   
@@ -242,7 +242,7 @@
       #20201F 5%,
       transparent 50%,
       #20201F 100%
-    );
+    ) !important;
     display: block;
     content: '';
     z-index: 999 !important;
