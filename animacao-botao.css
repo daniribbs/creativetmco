@@ -13,10 +13,10 @@
   text-decoration: none;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Círculo do Ícone */
+/* Círculo do Ícone (Tempo alterado de 0.5s para 0.8s) */
 .botao-animado-amarelo .icon-circle {
   position: absolute;
   left: 4px;
@@ -30,21 +30,21 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Seta Preta no Estado Normal */
+/* Seta Preta no Estado Normal (Tempo alterado de 0.4s para 0.6s) */
 .botao-animado-amarelo .ico-button_sm_yellow {
   width: 16px;
   height: 14px;
   color: #231F20;
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+              color 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Texto do Botão (Centralizado no estado normal) */
+/* Texto do Botão (Tempo alterado de 0.5s para 0.8s) */
 .botao-animado-amarelo .text-button {
   position: absolute;
   left: 70px; 
@@ -53,7 +53,7 @@
   color: #231F20;
   white-space: nowrap;
   z-index: 1;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* --- ESTADOS DE HOVER --- */
