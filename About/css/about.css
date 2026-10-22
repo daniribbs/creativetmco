@@ -239,9 +239,9 @@
   .logo-wrap:before {
     background: linear-gradient(
       90deg,
-      #21201a 5%,
+      #20201F 5%,
       transparent 50%,
-      #21201a 100%
+      #20201F 100%
     );
     display: block;
     content: '';
