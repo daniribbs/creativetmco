@@ -2,7 +2,7 @@
     var SPEED = 40; // px por segundo
   
     function init() {
-      var win = document.querySelector('.container-imagem');
+      var win = document.querySelector('.container-carrossel-vertical');
       var cols = Array.prototype.slice.call(
         document.querySelectorAll(
           '.carrossel-vertical-1, .carrossel-vertical-2'
@@ -10,7 +10,7 @@
       );
   
       if (!win || !cols.length) {
-        console.warn('[aura] container-imagem ou colunas do carrossel não encontradas');
+        console.warn('[aura] container-carrossel-vertical ou colunas do carrossel não encontradas');
         return;
       }
   
