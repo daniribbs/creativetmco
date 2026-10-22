@@ -1,10 +1,10 @@
 .container-carrossel-vertical {
-  position: relative;  
-  height: 100%;
-  overflow: hidden;
-  isolation: isolate;   
-  margin-top: 0;
-  max-height: 100%;
+  position: relative !important;  
+  height: 100% !important;
+  overflow: hidden !important;
+  isolation: isolate !important;   
+  margin-top: 0 !important;
+  max-height: 100% !important;
 }
 
 .aura-fade {
