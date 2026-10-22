@@ -1,0 +1,73 @@
+.botao-animado-amarelo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 224px;
+  height: 56px;
+  padding: 0 6px;
+  border-radius: 28px;
+  background-color: #F2E205;
+  border: 1px solid #E5D842;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Círculo do Ícone */
+.botao-animado-amarelo .icon-circle {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Seta Preta no Estado Normal */
+.botao-animado-amarelo .ico-button_sm_yellow {
+  width: 16px;
+  height: 14px;
+  color: #231F20;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Texto do Botão (Centralizado no estado normal) */
+.botao-animado-amarelo .text-button {
+  position: absolute;
+  left: 70px; 
+  font-weight: 700;
+  font-size: 14px;
+  color: #231F20;
+  white-space: nowrap;
+  z-index: 1;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --- ESTADOS DE HOVER --- */
+
+.botao-animado-amarelo:hover .icon-circle {
+  transform: translateX(168px); 
+  background-color: #20201F;
+  border-color: #444440;
+}
+
+.botao-animado-amarelo:hover .ico-button_sm_yellow {
+  color: #FCFCFC; 
+}
+
+.botao-animado-amarelo:hover .text-button {
+  transform: translateX(-38px);
+}
