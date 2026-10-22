@@ -2,7 +2,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 4px 24px 4px 54px; 
+  padding: 4px 28px 4px 58px; 
   height: 56px;
   border-radius: 28px;
   background-color: #F2E205;
@@ -45,7 +45,6 @@
 /* Texto do Botão */
 .botao-animado-amarelo .text-button {
   position: relative;
-  left: 0;
   font-weight: 700;
   font-size: 14px;
   color: #231F20;
@@ -54,10 +53,10 @@
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* --- ESTADOS DE HOVER  --- */
+/* --- ESTADOS DE HOVER --- */
 
 .botao-animado-amarelo:hover .icon-circle {
-  transform: translateX(calc(100% - 50px)); 
+  transform: translateX(calc(100% - 46px)); 
   background-color: #20201F;
   border-color: #444440;
 }
@@ -67,5 +66,5 @@
 }
 
 .botao-animado-amarelo:hover .text-button {
-  transform: translateX(-14px);
+  transform: translateX(-16px);
 }
