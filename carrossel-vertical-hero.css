@@ -4,6 +4,7 @@
   overflow: hidden;
   isolation: isolate;   
   margin-top: 0;
+  max-height: 100%;
 }
 
 .aura-fade {
