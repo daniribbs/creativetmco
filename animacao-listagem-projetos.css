@@ -1,0 +1,70 @@
+/* Transições suaves */
+.container-projetos .link-block,
+.container-projetos .link-block *,
+.container-projetos .link-block *::before,
+.container-projetos .link-block *::after {
+  transition: color 0.5s ease, background-color 0.5s ease, border-color 0.5s ease;
+}
+
+/* ========================================================
+   1. QUANDO HÁ UM HOVER NA LISTA: APAGA TODOS OS NÃO-SELECIONADOS
+   ======================================================== */
+.container-projetos:has(.link-block:hover) .link-block:not(:hover) {
+  .numero,
+  .numero-apagado {
+    color: rgba(56, 53, 51, 0.3) !important;
+  }
+  .titulo,
+  .titulo-apagado {
+    color: rgba(186, 179, 177, 0.3) !important;
+  }
+  .badges-14,
+  .badge-apagada {
+    background-color: #20201F !important;
+    border-color: #444440 !important;
+  }
+  .badge-13,
+  .badge-14 {
+    color: #B7B6AE !important;
+  }
+}
+
+/* ========================================================
+   2. ESTADO ESPECÍFICO DO ITEM EM HOVER (DESTAQUE)
+   ======================================================== */
+.container-projetos .link-block:hover {
+  .numero,
+  .numero-apagado {
+    color: #B7B6AE !important;
+  }
+  .titulo,
+  .titulo-apagado {
+    color: #EEEEEC !important;
+  }
+  .badges-14,
+  .badge-apagada {
+    background-color: #21211A !important;
+    border-color: #534F18 !important;
+  }
+  .badge-13,
+  .badge-14 {
+    color: #EEE24E !important;
+  }
+}
+
+/* ========================================================
+   AJUSTES PARA TABLETS E CELULARES
+   ======================================================== */
+@media (max-width: 1024px) {
+  .container-projetos .link-block {
+    .numero,
+    .numero-apagado {
+      color: #B7B6AE !important;
+    }
+
+    .titulo,
+    .titulo-apagado {
+      color: #EEEEEC !important;
+    }
+  }
+}
