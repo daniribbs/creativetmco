@@ -9,7 +9,6 @@
   .portfolio-list > [class*="sticky-"] {
     position: sticky;
     top: 120px;
-    height: clamp(420px, 70vh, 560px);
   }
   
   .sticky-1 { z-index: 1; top: 120px; }
