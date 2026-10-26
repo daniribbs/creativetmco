@@ -1,0 +1,26 @@
+.portfolio-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding-bottom: 120px;
+  }
+  
+  .portfolio-list > [class*="sticky-"] {
+    position: sticky;
+    top: 120px; /* ajuste conforme a altura do header */
+  }
+  
+  .sticky-1 { z-index: 1; top: 120px; }
+  .sticky-2 { z-index: 2; top: 136px; }
+  .sticky-3 { z-index: 3; top: 152px; }
+  
+  .portfolio-card {
+    --p: 0; /* progresso 0 → 1, controlado pelo JS */
+    transform-origin: center top;
+    transform: scale(calc(1 - var(--p) * 0.05));
+    filter: brightness(calc(1 - var(--p) * 0.08));
+    border-radius: 20px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.18);
+    will-change: transform;
+  }
