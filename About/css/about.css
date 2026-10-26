@@ -91,24 +91,6 @@
     width: 100%;
   }
   
-  /* Gradiente fixo apenas na lateral direita */
-  .gallery-case::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 18%;
-    max-width: 220px;
-    pointer-events: none;
-    z-index: 10;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      #20201F 100%
-    );
-  }
-  
   .gallery-case-wrap {
     box-sizing: border-box;
     display: flex !important;
