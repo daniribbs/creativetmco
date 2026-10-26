@@ -8,7 +8,7 @@
   
   .portfolio-list > [class*="sticky-"] {
     position: sticky;
-    top: 120px; /* ajuste conforme a altura do header */
+    top: 130px; 
   }
   
   .sticky-1 { z-index: 1; top: 120px; }
