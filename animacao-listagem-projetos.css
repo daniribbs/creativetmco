@@ -52,6 +52,27 @@
   }
 }
 
+.container-imagens-projetos {
+  position: relative;
+
+  height: 100%;
+}
+
+.container-imagens-projetos .img-projeto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.container-imagens-projetos .img-projeto.is-active {
+  opacity: 1;
+  z-index: 2;
+}
+
 /* ========================================================
    AJUSTES PARA TABLETS E CELULARES
    ======================================================== */
