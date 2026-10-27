@@ -7,14 +7,13 @@
     }
   
     @keyframes tmco-menu-down {
-      from { transform: translateY(-100%); }
+      from { transform: translateY(calc(-100% - 50px)); }
       to   { transform: translateY(0); }
     }
   
-    /* Fechado: acima da tela (transição de SAÍDA) */
     body .overlay.std,
     body .overlay_services.overlay{
-      transform: translateY(-100%);
+      transform: translateY(calc(-100% - 50px));
       opacity: 1;
       visibility: hidden;
       pointer-events: none;
@@ -24,7 +23,7 @@
         visibility 0s linear var(--tmco-menu-out);
     }
   
-    /* Aberto: desce do topo (ENTRADA por keyframes) */
+    /* Aberto: desce para a posição normal */
     body.tmco-mobile-open:not(.tmco-services-open) .overlay.std,
     body.tmco-services-open .overlay_services.overlay{
       transform: translateY(0);
@@ -50,19 +49,4 @@
       animation-duration: .01ms !important;
       transition-delay: 0s !important;
     }
-
-    @media (max-width: 991px) {
-        /* Garante que o menu cubra 100% da tela e esconda qualquer excesso */
-        body .overlay.std,
-        body .overlay_services.overlay {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          max-height: 100vh !important;
-          overflow-y: auto !important; /* Se o menu tiver muito conteúdo, ele rola internamente */
-          box-sizing: border-box;
-        }
-      }
   }
