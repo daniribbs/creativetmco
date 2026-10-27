@@ -1,0 +1,33 @@
+#mensagem {
+    resize: none;
+    padding-bottom: 32px !important; 
+    overflow-y: scroll !important;   
+    scrollbar-width: thin;
+    scrollbar-color: #484205 transparent;
+  }
+  
+  .contador-caracteres {
+    position: absolute;
+    right: 14px;
+    bottom: 10px;
+    z-index: 5;
+    color: #B7B6AE !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  
+  #mensagem::-webkit-scrollbar { width: 6px; }
+  #mensagem::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 10px 0 32px;
+  }
+  #mensagem::-webkit-scrollbar-thumb {
+    background: #484205;
+    border-radius: 999px;
+  }
+  #mensagem::-webkit-scrollbar-button { display: none; }
