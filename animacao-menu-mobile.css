@@ -1,0 +1,53 @@
+@media (max-width: 991px) {
+
+    :root{
+      --tmco-menu-in: .9s;    
+      --tmco-menu-out: .7s;   
+      --tmco-menu-ease: cubic-bezier(.65,0,.35,1); 
+    }
+  
+    @keyframes tmco-menu-down {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(0); }
+    }
+  
+    /* Fechado: acima da tela (transição de SAÍDA) */
+    body .overlay.std,
+    body .overlay_services.overlay{
+      transform: translateY(-100%);
+      opacity: 1;
+      visibility: hidden;
+      pointer-events: none;
+      will-change: transform;
+      transition:
+        transform var(--tmco-menu-out) var(--tmco-menu-ease),
+        visibility 0s linear var(--tmco-menu-out);
+    }
+  
+    /* Aberto: desce do topo (ENTRADA por keyframes) */
+    body.tmco-mobile-open:not(.tmco-services-open) .overlay.std,
+    body.tmco-services-open .overlay_services.overlay{
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      animation: tmco-menu-down var(--tmco-menu-in) var(--tmco-menu-ease) both;
+      transition: visibility 0s;
+    }
+  
+    body.tmco-services-open .overlay.std{
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      animation: none;
+    }
+  }
+  
+  @media (max-width: 991px) and (prefers-reduced-motion: reduce){
+    body .overlay.std,
+    body .overlay_services.overlay{
+      animation-duration: .01ms !important;
+      transition-delay: 0s !important;
+    }
+  }
