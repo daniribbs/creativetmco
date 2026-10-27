@@ -50,4 +50,19 @@
       animation-duration: .01ms !important;
       transition-delay: 0s !important;
     }
+
+    @media (max-width: 991px) {
+        /* Garante que o menu cubra 100% da tela e esconda qualquer excesso */
+        body .overlay.std,
+        body .overlay_services.overlay {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          max-height: 100vh !important;
+          overflow-y: auto !important; /* Se o menu tiver muito conteúdo, ele rola internamente */
+          box-sizing: border-box;
+        }
+      }
   }
