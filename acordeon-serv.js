@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const items = Array.from(document.querySelectorAll('.service-item-acordeon'));
   const imageItems = Array.from(document.querySelectorAll('.image-service-acordeon-item'));
 
-  // Mostra a imagem correspondente ao item
+  // Mostra a imagem correspondente ao item com transição suave
   function showImageForItem(item) {
     if (!imageItems.length || !item) return;
 
@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', function () {
       imgItem.classList.remove('is-visible');
     });
 
-    target.classList.add('is-visible');
+    // Pequeno delay para garantir que o navegador processe a troca de classe se necessário
+    setTimeout(function() {
+      target.classList.add('is-visible');
+    }, 20);
   }
 
   function closeAllItems() {
@@ -48,12 +51,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const isOpen = item.classList.contains('is-open');
 
     if (isOpen) {
-      // fecha (nenhum aberto) e mantém a imagem atual
       item.classList.remove('is-open');
       return;
     }
 
-    // abre este e fecha os outros + atualiza imagem
     openItemExclusive(item);
   }
 
@@ -63,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (contentTrigger) {
       contentTrigger.addEventListener('click', function (e) {
-        // se tiver <a> dentro e você NÃO quiser bloquear navegação, remova o preventDefault
         e.preventDefault();
         toggleItem(item);
       });
@@ -79,10 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // estado inicial:
-  // - todos fechados
-  // - primeira imagem visível (se existir)
+  // Estado inicial: abre o primeiro e exibe a imagem correspondente de forma suave
   if (items.length && imageItems.length) {
+    items[0].classList.add('is-open');
     showImageForItem(items[0]);
   }
 });

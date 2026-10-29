@@ -19,14 +19,9 @@
   display: block;
   animation: accordionFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.service-item-acordeon .acordeon-serv-description {
-  display: none;
-}
+
 .service-item-acordeon .ico-acordeon.close {
   display: none;
-}
-.service-item-acordeon.is-open .acordeon-serv-description {
-  display: block;
 }
 .service-item-acordeon.is-open .ico-acordeon.open {
   display: none;
@@ -35,10 +30,34 @@
   display: block;
 }
 
-/* imagens do acordeon: por padrão todas escondidas, só a .is-visible aparece */
-.image-service-acordeon-item {
-  display: none;
+/* O contêiner pai que envolve as imagens precisa ser um grid */
+.image-service-acordeon-wrapper, 
+.image-service-acordeon-container {
+  display: grid;
 }
+
+.image-service-acordeon-item {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.03);
+  pointer-events: none;
+  transition:
+    opacity 700ms cubic-bezier(.22, 1, .36, 1),
+    transform 900ms cubic-bezier(.22, 1, .36, 1);
+}
+
 .image-service-acordeon-item.is-visible {
-  display: block;
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-service-acordeon-item {
+    transition: none;
+    transform: none;
+  }
 }
