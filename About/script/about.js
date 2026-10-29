@@ -1,58 +1,57 @@
 /* ============================================================
    1. ACCORDION — PROCESSO (COM IMAGEM POR ITEM)
    ============================================================ */
-
    (function () {
     var ITEM_SELECTOR = ".accordion-item-processo";
     var IMAGE_SELECTOR = ".processo-image";
     var OPEN_CLASS = "is-open";
     var ACTIVE_CLASS = "is-active";
-  
+   
     function getItems() {
       return Array.prototype.slice.call(document.querySelectorAll(ITEM_SELECTOR));
     }
-  
+   
     function getImages() {
       return Array.prototype.slice.call(document.querySelectorAll(IMAGE_SELECTOR));
     }
-  
+   
     function showImage(i) {
       var images = getImages();
       if (!images[i]) return;
-  
+   
       images.forEach(function (img, n) {
         img.classList.toggle(ACTIVE_CLASS, n === i);
       });
     }
-  
+   
     function initAccordion() {
       getItems().forEach(function (item) {
         item.classList.remove(OPEN_CLASS);
       });
       showImage(0);
     }
-  
+   
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initAccordion);
     } else {
       initAccordion();
     }
-  
+   
     document.addEventListener("click", function (event) {
       if (event.target.closest("a, button")) return;
-  
+   
       var item = event.target.closest(ITEM_SELECTOR);
       if (!item) return;
-  
+   
       var items = getItems();
       var willOpen = !item.classList.contains(OPEN_CLASS);
-  
+   
       items.forEach(function (other) {
         if (other !== item) other.classList.remove(OPEN_CLASS);
       });
-  
+   
       item.classList.toggle(OPEN_CLASS, willOpen);
-  
+   
       if (willOpen) showImage(items.indexOf(item));
     });
   })();
