@@ -28,6 +28,7 @@
       getItems().forEach(function (item) {
         item.classList.remove(OPEN_CLASS);
       });
+      getItems()[0].classList.add(OPEN_CLASS);
       showImage(0);
     }
    
