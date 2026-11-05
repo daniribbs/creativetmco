@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showAll();
   }
 
+
   // =========================
   // 2) MOBILE DROPDOWN
   // =========================
@@ -89,19 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     style.textContent = `
       .select-cases-box.is-mobile .select-case-wrap {
-        display: none;
+        display: none !important;
       }
 
       .select-cases-box.is-mobile.is-open .select-case-wrap {
-        display: block;
+        display: block !important;
       }
 
       .select-cases-box .ico-select-case {
         transition: transform 200ms ease;
-        transform-origin: 50% 50%;
+        transform-origin: center;
       }
 
-      .select-cases-box.is-open .ico-select-case {
+      .select-cases-box.is-mobile.is-open .ico-select-case {
         transform: rotate(180deg);
       }
     `;
@@ -113,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.select-cases-box')
   );
 
-  const isMobile = () => mql.matches;
+  const isMobile = () => window.innerWidth <= MOBILE_BP;
 
   boxes.forEach(box => {
     const labelLink = box.querySelector('.drop-case_label');
@@ -123,25 +124,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!labelLink || !wrap || !list) return;
 
-    labelLink.setAttribute('aria-expanded', 'false');
-
     const close = () => {
       box.classList.remove('is-open');
       labelLink.setAttribute('aria-expanded', 'false');
-    };
-
-    const toggle = () => {
-      const willOpen = !box.classList.contains('is-open');
-
-      box.classList.toggle('is-open', willOpen);
-      labelLink.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
     };
 
     labelLink.addEventListener('click', e => {
       if (!isMobile()) return;
 
       e.preventDefault();
-      toggle();
+      e.stopPropagation();
+
+      const willOpen = !box.classList.contains('is-open');
+
+      box.classList.toggle('is-open', willOpen);
+      labelLink.setAttribute(
+        'aria-expanded',
+        willOpen ? 'true' : 'false'
+      );
     });
 
     list.addEventListener('click', e => {
@@ -152,10 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (labelText) {
         const selected = (btn.textContent || '').trim();
-        const servico = (btn.getAttribute('servico') || '').trim();
+        const value = (btn.getAttribute('servico') || '').trim();
 
         labelText.textContent =
-          servico === '__all__' ? 'Filtre por categoria' : selected;
+          value === '__all__' ? 'Filtre por categoria' : selected;
       }
 
       close();
@@ -175,12 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
         close();
       } else {
         box.classList.remove('is-mobile');
-        box.classList.remove('is-open');
-        labelLink.setAttribute('aria-expanded', 'false');
+        close();
       }
     };
 
     applyMode();
-    mql.addEventListener('change', applyMode);
+    window.addEventListener('resize', applyMode);
   });
 });
