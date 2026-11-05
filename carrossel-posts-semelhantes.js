@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', function () {
   
       const slides = Array.from(track.querySelectorAll('.case-item'));
       if (slides.length < 2) return;
+
+      // Clona os primeiros cards para criar a continuidade do loop
+        const loopClones = 3;
+
+        slides.slice(0, loopClones).forEach(slide => {
+            const clone = slide.cloneNode(true);
+            clone.classList.add('is-loop-clone');
+            track.appendChild(clone);
+        });
   
       const PROGRESS_MS = 6500;
   
@@ -112,16 +121,13 @@ document.addEventListener('DOMContentLoaded', function () {
   
         slidesPerView = isMobile() ? 1 : 3;
   
-        // ✅ CHAVE: permitir alinhar QUALQUER card à esquerda no desktop
-        // adiciona espaço à direita equivalente a (slidesPerView - 1) cards
         if (!isMobile() && step >= 10){
           track.style.paddingRight = ((slidesPerView - 1) * step) + 'px';
         } else {
           track.style.paddingRight = '0px';
         }
   
-        // ✅ agora o track pode ir até o último card
-        maxIndex = Math.max(0, slides.length - 1);
+        maxIndex = slides.length + loopClones - 1;
   
         focus = Math.max(0, Math.min(slides.length - 1, focus));
         index = indexFromFocus(focus);
@@ -226,17 +232,34 @@ document.addEventListener('DOMContentLoaded', function () {
   
       function next(){
         if (!ensureMeasured()) return;
-  
+    
+        // Chegou ao último card original: avança até o clone do primeiro
         if (focus >= slides.length - 1){
-          focus = 0;
-          index = 0;
-          setTransform(0, false);
-          ensureAutoplay();
-          return;
+            focus = 0;
+            index = slides.length;
+    
+            setTransform(index, true);
+    
+            return;
         }
+    
         applyFocus(focus + 1, true);
         ensureAutoplay();
-      }
+    }
+
+    track.addEventListener('transitionend', function(e){
+
+        if (e.target !== track) return;
+        if (index < slides.length) return;
+    
+        // Reposiciona no primeiro card original sem animação
+        index = 0;
+        focus = 0;
+    
+        setTransform(0, false);
+    
+        ensureAutoplay();
+    });
   
       function prev(){
         if (!ensureMeasured()) return;
