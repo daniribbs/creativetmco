@@ -160,11 +160,10 @@
         padding-right: 0 !important;
     }
 
-    /* Cards: um inteiro + peek do próximo */
     .gallery-rel .case-item,
     .gallery-rel .case-item.w-col,
     .gallery-rel .case-item.w-col-6 {
-        width: calc(100vw - var(--mobile-left) - var(--mobile-peek)) !important;
+        width: calc(100vw - var(--mobile-left)) !important;
         max-width: none !important;
         flex: 0 0 auto !important;
     }
