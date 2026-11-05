@@ -125,64 +125,52 @@
     white-space: normal !important;
   }
   
-  @media (max-width: 991px){
-    :root{
-      --gallery-gap: 16px;     /* espaço entre cards */
-      --mobile-left: 16px;    /* padding esquerdo */
-      --mobile-peek: 64px;    /* “reserva” pra aparecer o próximo card (inclui o gap) */
+  @media (max-width: 991px) {
+
+    :root {
+        --gallery-gap: 16px;
+        --mobile-left: 16px;
+        --mobile-peek: 64px;
     }
-  
-    /* full-bleed (100vw) */
-    .gallery-rel{
-      width: 100vw !important;
-      margin-left: calc(50% - 50vw) !important;
-      overflow: visible !important;
+
+    /* Full bleed sem criar scroll horizontal */
+    .gallery-rel {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        overflow: hidden !important;
     }
-  
-    /* esquerda 16px, direita colada */
-    .gallery-rel .cases-wrap{
-      padding-left: var(--mobile-left) !important;
-      padding-right: 0 !important;
-      box-sizing: border-box !important;
-      overflow: visible !important;
+
+    /* Área visível do carrossel */
+    .gallery-rel .cases-wrap {
+        width: 100%;
+        max-width: 100%;
+        padding-left: var(--mobile-left) !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        min-width: 0;
     }
-  
-    /* 1 card inteiro + peek do próximo */
+
+    /* Track */
+    .gallery-rel .rel-cases-list {
+        width: max-content;
+        max-width: none;
+        overflow: visible;
+        padding-right: 0 !important;
+    }
+
+    /* Cards: um inteiro + peek do próximo */
     .gallery-rel .case-item,
     .gallery-rel .case-item.w-col,
-    .gallery-rel .case-item.w-col-6{
-      width: calc(100vw - var(--mobile-left) - var(--mobile-peek)) !important;
+    .gallery-rel .case-item.w-col-6 {
+        width: calc(100vw - var(--mobile-left) - var(--mobile-peek)) !important;
+        max-width: none !important;
+        flex: 0 0 auto !important;
     }
-  
-    /* sem dots no mobile */
-    .gallery-rel .gallery-case_dots{ display: none !important; }
-  }
 
-  /* Impede o overflow horizontal do carrossel */
-.gallery-rel .cases-wrap {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-  min-width: 0;
+    /* Sem dots no mobile */
+    .gallery-rel .gallery-case_dots {
+        display: none !important;
+    }
 }
-
-.gallery-rel .rel-cases-list {
-  display: flex;
-  flex-wrap: nowrap;
-  width: max-content;
-  max-width: none;
-}
-
-@media (max-width: 991px) {
-  .gallery-rel,
-  .gallery-rel .cases-wrap {
-      max-width: 100%;
-      overflow-x: clip;
-  }
-
-  .gallery-rel .rel-cases-list {
-      padding-right: 0 !important;
-  }
-}
-  
