@@ -130,7 +130,7 @@
     :root {
         --gallery-gap: 16px;
         --mobile-left: 16px;
-        --mobile-peek: 64px;
+        --mobile-peek: 0px;
     }
 
     /* Full bleed sem criar scroll horizontal */
