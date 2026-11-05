@@ -108,7 +108,7 @@
   }
   
   /* Arrows */
-  .gallery-rel .arrow-slider{
+  .gallery-rel .arrow-slider-blog{
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;

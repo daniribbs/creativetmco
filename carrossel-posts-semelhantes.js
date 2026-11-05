@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const wrap     = root.querySelector('.cases-wrap');
       const track    = root.querySelector('.rel-cases-list');
       const dotsWrap = root.querySelector('.gallery-case_dots');
-      const btnPrev  = root.querySelector('.arrow-slider.left');
-      const btnNext  = root.querySelector('.arrow-slider.right');
+      const btnPrev  = root.querySelector('.arrow-slider-blog.left');
+      const btnNext  = root.querySelector('.arrow-slider-blog.right');
   
       if (!wrap || !track) return;
   
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
       function onPointerDown(e){
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         const t = e.target;
-        if (t && (t.closest('.arrow-slider') || t.closest('.gallery-dot'))) return;
+        if (t && (t.closest('.arrow-slider-blog') || t.closest('.gallery-dot'))) return;
         if (!ensureMeasured()) return;
   
         isDown = true;
